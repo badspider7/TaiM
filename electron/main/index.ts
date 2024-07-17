@@ -7,16 +7,6 @@ import { BrowserWindow, app, ipcMain, shell } from 'electron'
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// The built directory structure
-//
-// ├─┬ dist-electron
-// │ ├─┬ main
-// │ │ └── index.js    > Electron-Main
-// │ └─┬ preload
-// │   └── index.mjs   > Preload-Scripts
-// ├─┬ dist
-// │ └── index.html    > Electron-Renderer
-//
 process.env.APP_ROOT = path.join(__dirname, '../..')
 
 export const MAIN_DIST = path.join(process.env.APP_ROOT, 'dist-electron')
@@ -35,22 +25,32 @@ if (os.release().startsWith('6.1'))
 if (process.platform === 'win32')
   app.setAppUserModelId(app.getName())
 
+let win: BrowserWindow | null = null
+
 if (!app.requestSingleInstanceLock()) {
   app.quit()
   process.exit(0)
 }
+else {
+  app.on('second-instance', (event, commandLine, workingDirectory) => {
+    win?.show()
+  })
+}
 
-let win: BrowserWindow | null = null
 const preload = path.join(__dirname, '../preload/index.mjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
 
-async function createWindow() {
+export async function createWindow() {
   win = new BrowserWindow({
-    title: 'Main window',
-    icon: path.join(process.env.VITE_PUBLIC, 'favicon.ico'),
+    title: 'TaiM',
+    icon: path.join(process.env.VITE_PUBLIC, '../../public/favicon.svg'),
     webPreferences: {
       preload,
+      nodeIntegration: true,
+      contextIsolation: true,
     },
+    titleBarStyle: 'hidden',
+    show: false,
   })
 
   if (VITE_DEV_SERVER_URL) {
@@ -62,6 +62,7 @@ async function createWindow() {
     win.loadFile(indexHtml)
   }
 
+  win.once('ready-to-show', () => win?.show())
   // Test actively push message to the Electron-Renderer
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString())
@@ -76,47 +77,26 @@ async function createWindow() {
   // win.webContents.on('will-navigate', (event, url) => { }) #344
 }
 
-app.whenReady().then(createWindow)
-
 app.on('window-all-closed', () => {
   win = null
   if (process.platform !== 'darwin')
     app.quit()
 })
 
-app.on('second-instance', () => {
-  if (win) {
-    // Focus on the main window if the user tried to open another
-    if (win.isMinimized())
-      win.restore()
-    win.focus()
-  }
+app.whenReady().then(() => {
+  void createWindow()
 })
 
-app.on('activate', () => {
-  const allWindows = BrowserWindow.getAllWindows()
-  if (allWindows.length) {
-    allWindows[0].focus()
-  }
-  else {
-    createWindow()
-  }
-})
+// 设置任务栏
+// app.setUserTasks([])
 
-// New window example arg: new windows url
-ipcMain.handle('open-win', (_, arg) => {
-  const childWindow = new BrowserWindow({
-    webPreferences: {
-      preload,
-      nodeIntegration: true,
-      contextIsolation: false,
-    },
-  })
-
-  if (VITE_DEV_SERVER_URL) {
-    childWindow.loadURL(`${VITE_DEV_SERVER_URL}#${arg}`)
-  }
-  else {
-    childWindow.loadFile(indexHtml, { hash: arg })
-  }
-})
+// app.on('activate', () => {
+//   const allWindows = BrowserWindow.getAllWindows()
+//   if (allWindows.length) {
+//     allWindows[0].focus()
+//   }
+//   else {
+//     console.log('active')
+//     createWindow()
+//   }
+// })
