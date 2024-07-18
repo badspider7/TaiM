@@ -4,7 +4,7 @@ import { ref } from 'vue'
 
 <template>
   <div>
-    Hello Electron
+    统计
   </div>
 </template>
 

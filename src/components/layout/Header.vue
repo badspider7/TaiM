@@ -61,7 +61,7 @@ function closeHandler() {
     width: 100%;
     height: 40px;
     background-color: #fff;
-    border-bottom: 1px solid #eee;
+    // border-bottom: 1px solid #eee;
     -webkit-app-region: drag;
     .header-left{
       display: flex;

@@ -22,7 +22,7 @@ export function setupTray(win: BrowserWindow): void {
 
   tray.setToolTip('TaiM')
   tray.setContextMenu(contextMenu)
-  tray.on('double-click', () => {
+  tray.on('click', () => {
     win.show()
   })
 }
