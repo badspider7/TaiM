@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
+import { setupHandle } from '../handle'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -85,6 +86,7 @@ app.on('window-all-closed', () => {
 
 app.whenReady().then(() => {
   void createWindow()
+  setupHandle(win)
 })
 
 // 设置任务栏

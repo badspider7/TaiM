@@ -6,6 +6,7 @@ import electron from 'vite-plugin-electron/simple'
 
 import tailwind from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
+import svgLoader from 'vite-svg-loader'
 import pkg from './package.json'
 
 // https://vitejs.dev/config/
@@ -25,7 +26,7 @@ export default defineConfig(({ command }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),
-        '@@': path.resolve(__dirname, 'electron'),
+        '@electron': path.resolve(__dirname, 'electron'),
       },
     },
     plugins: [
@@ -34,6 +35,7 @@ export default defineConfig(({ command }) => {
         main: {
           // Shortcut of `build.lib.entry`
           entry: 'electron/main/index.ts',
+
           onstart({ startup }) {
             if (process.env.VSCODE_DEBUG) {
               console.log(
@@ -49,6 +51,7 @@ export default defineConfig(({ command }) => {
               sourcemap,
               minify: isBuild,
               outDir: 'dist-electron/main',
+
               rollupOptions: {
                 // Some third-party Node.js libraries may not be built correctly by Vite, especially `C/C++` addons,
                 // we can use `external` to exclude them to ensure they work correctly.
@@ -57,6 +60,7 @@ export default defineConfig(({ command }) => {
                 external: Object.keys(
                   'dependencies' in pkg ? pkg.dependencies : {},
                 ),
+
               },
             },
           },
@@ -83,6 +87,10 @@ export default defineConfig(({ command }) => {
         // See 👉 https://github.com/electron-vite/vite-plugin-electron-renderer
         renderer: {},
       }),
+      svgLoader(({
+        svgoConfig: {
+        },
+      })),
     ],
     server:
       process.env.VSCODE_DEBUG
