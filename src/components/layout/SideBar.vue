@@ -81,7 +81,7 @@ router.beforeEach((to, from, next) => {
 }
 
 .is-active{
-     background: linear-gradient(45deg, black, transparent) !important;
+     background: linear-gradient(45deg, #cca2a2, transparent) !important;
      color:#fff;
   svg{
     fill: red

@@ -4,6 +4,7 @@ import path from 'node:path'
 import os from 'node:os'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { setupHandle } from '../handle'
+import { startRecord } from '../utils'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -65,9 +66,10 @@ export async function createWindow() {
   }
 
   win.once('ready-to-show', () => win?.show())
-  // Test actively push message to the Electron-Renderer
+
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString())
+    startRecord()
   })
 
   // Make all links open with the browser, not with the application
@@ -89,17 +91,3 @@ app.whenReady().then(() => {
   void createWindow()
   setupHandle(win)
 })
-
-// 设置任务栏
-// app.setUserTasks([])
-
-// app.on('activate', () => {
-//   const allWindows = BrowserWindow.getAllWindows()
-//   if (allWindows.length) {
-//     allWindows[0].focus()
-//   }
-//   else {
-//     console.log('active')
-//     createWindow()
-//   }
-// })
