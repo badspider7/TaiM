@@ -5,6 +5,8 @@ import os from 'node:os'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { setupHandle } from '../handle'
 import { startRecord } from '../utils'
+import logger from '../logger'
+import { initDb } from '../db'
 
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -40,6 +42,15 @@ else {
   })
 }
 
+process
+  .on('unhandledRejection', (reason, p) => {
+    logger.error('Unhandled Rejection at Promise', reason, p)
+  })
+  .on('uncaughtException', (err) => {
+    logger.error(err)
+    throw err
+  })
+
 const preload = path.join(__dirname, '../preload/index.mjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
 
@@ -69,7 +80,8 @@ export async function createWindow() {
 
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString())
-    startRecord()
+    // 开始统计应用时间
+    // startRecord()
   })
 
   // Make all links open with the browser, not with the application
@@ -88,6 +100,7 @@ app.on('window-all-closed', () => {
 })
 
 app.whenReady().then(() => {
+  initDb()
   void createWindow()
   setupHandle(win)
 })
