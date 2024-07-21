@@ -4,7 +4,7 @@ import path from 'node:path'
 import os from 'node:os'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { setupHandle } from '../handle'
-import { startRecord } from '../utils'
+import { getIcon, startRecord } from '../utils'
 import logger from '../logger'
 import { initDb } from '../db'
 
@@ -103,4 +103,5 @@ app.whenReady().then(() => {
   initDb()
   void createWindow()
   setupHandle(win)
+  getIcon()
 })

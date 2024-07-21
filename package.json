@@ -34,6 +34,7 @@
     "better-sqlite3": "^11.1.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "extract-file-icon": "^0.3.2",
     "get-windows": "^9.1.1",
     "lucide-vue-next": "^0.408.0",
     "radix-vue": "^1.9.1",
@@ -47,7 +48,6 @@
     "@types/node": "^20.14.11",
     "@vitejs/plugin-vue": "^5.0.4",
     "autoprefixer": "^10.4.19",
-
     "electron": "^29.4.3",
     "electron-builder": "^24.13.3",
     "eslint": "^9.7.0",

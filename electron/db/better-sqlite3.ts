@@ -14,7 +14,7 @@ export function getDB() {
   if (db) {
     return db
   }
-  return IS_DEV ? getSqlite3('test.db') : getSqlite3()
+  return IS_DEV ? getSqlite3('sqlite3.db') : getSqlite3()
 }
 
 function getSqlite3(filename = path.join(app.getPath('userData'), 'better-sqlite3.sqlite3')): Database.Database {

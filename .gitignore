@@ -23,6 +23,8 @@ release
 *.njsproj
 *.sln
 *.sw?
+*.db
+*.db-*
 
 # lockfile
 package-lock.json
