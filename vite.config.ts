@@ -4,7 +4,6 @@ import { createRequire } from 'node:module'
 import { type Plugin, defineConfig, normalizePath } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron/simple'
-import vitePluginRequire from 'vite-plugin-require'
 
 import tailwind from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
@@ -129,7 +128,6 @@ function bindingSqlite3(
       // https://github.com/vitejs/vite/blob/v4.4.9/packages/vite/src/node/config.ts#L496-L499
       const resolvedRoot = normalizePath(config.root ? path.resolve(config.root) : process.cwd())
       const output = path.resolve(resolvedRoot, options.output as string)
-      // 这行代码在vite5中报错了，解决一下
       const better_sqlite3 = require.resolve('better-sqlite3')
       const better_sqlite3_root = path.join(
         better_sqlite3.slice(0, better_sqlite3.lastIndexOf('node_modules')),

@@ -4,7 +4,7 @@ import path from 'node:path'
 import os from 'node:os'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { setupHandle } from '../handle'
-import { getIcon, startRecord } from '../utils'
+import { startRecord } from '../utils'
 import logger from '../logger'
 import { initDb } from '../db'
 
@@ -81,7 +81,7 @@ export async function createWindow() {
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString())
     // 开始统计应用时间
-    // startRecord()
+    startRecord()
   })
 
   // Make all links open with the browser, not with the application
@@ -103,5 +103,4 @@ app.whenReady().then(() => {
   initDb()
   void createWindow()
   setupHandle(win)
-  getIcon()
 })
