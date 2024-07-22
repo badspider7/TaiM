@@ -7,27 +7,32 @@ const fileIcon = require('extract-file-icon')
 
 const icondir = path.join(process.cwd(), 'AppIcons')
 
-export async function getWinIco(appInfo) {
-  try {
-    await mkdir(icondir, { recursive: true }).catch((err) => {
-      if (err.code !== 'EEXIST')
-        throw err
-    })
-
-    const buffer = fileIcon(appInfo.path, 32)
-    const iconpath = path.join(icondir, `${appInfo.name}.png`)
-
+export async function getWinIco(appInfo): Promise<string> {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async (resolve, reject) => {
     try {
-      await access(iconpath, constants.W_OK)
-    }
-    catch (err) {
-      if (err.code !== 'ENOENT') {
-        throw err
+      await mkdir(icondir, { recursive: true }).catch((err) => {
+        if (err.code !== 'EEXIST')
+          throw err
+      })
+
+      const buffer = fileIcon(appInfo.path, 32)
+      const iconpath: string = path.join(icondir, `${appInfo.name}.png`)
+
+      try {
+        await access(iconpath, constants.W_OK)
       }
-      await writeFilePromise(iconpath, buffer)
+      catch (err) {
+        if (err.code !== 'ENOENT') {
+          throw err
+        }
+        await writeFilePromise(iconpath, buffer)
+        resolve(iconpath)
+      }
     }
-  }
-  catch (e) {
-    console.error(e, appInfo.path)
-  }
+    catch (e) {
+      reject(e)
+      console.error(e, appInfo.path)
+    }
+  })
 }

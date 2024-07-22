@@ -18,7 +18,6 @@ export function getDB() {
 }
 
 function getSqlite3(filename = path.join(app.getPath('userData'), 'better-sqlite3.sqlite3')): Database.Database {
-  console.log('filename====', filename)
   db = new Database(filename, {
     // https://github.com/WiseLibs/better-sqlite3/blob/v8.5.2/lib/database.js#L36
     // https://github.com/WiseLibs/better-sqlite3/blob/v8.5.2/lib/database.js#L50

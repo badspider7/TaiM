@@ -1,6 +1,8 @@
 import { activeWindow } from 'get-windows'
 import logger from '../logger'
 import { getIcon } from '../utils'
+import appModelDB from '../db/appModels'
+import type { AppModel } from '../type/types'
 
 interface bounds { x: number, y: number, width: number, height: number }
 
@@ -44,14 +46,24 @@ async function updateTime() {
         timeMap.set(appName, timeMap.get(appName) + 1)
       }
       else {
+        const { path, name } = windowInfo.owner
+        const iconFile = await getIcon({ path, name })
         timeMap.set(appName, 1)
+        const appQuery: AppModel = {
+          name,
+          alias: '',
+          description: '',
+          file: path,
+          categoryId: 0,
+          iconFile,
+          totalTime: 1,
+        }
+        appModelDB.insertAppModel(appQuery)
       }
-      const { path, name } = windowInfo.owner
-      getIcon({ path, name })
-      // console.log(`Current active window: ${appName}, Total time: ${timeMap.get(appName)}s`)
     }
   }
   catch (error) {
+    console.log('error===')
     logger.debug('Error updating window time:', error)
   }
 }

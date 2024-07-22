@@ -1,8 +1,7 @@
 import type Database from 'better-sqlite3'
+import type { AppModel } from '../type/types'
 import { getDB } from './better-sqlite3'
 import type { DBConfig } from './index'
-
-interface AppModel { id: number, name: string, alias: string, file: string, categoryId: number, iconFile: string, totalTime: number }
 
 export interface AppModelDB extends DBConfig {
   queryAppModel: (id: number) => AppModel
@@ -10,6 +9,7 @@ export interface AppModelDB extends DBConfig {
   updateAppModel: (appQuery: AppModel) => void
   deleteAppModel: (id: number) => void
   getAllAppModel: () => AppModel[]
+  clearAllData: () => void
 }
 
 function useDB(db: Database.Database): AppModelDB {
@@ -23,10 +23,11 @@ function useDB(db: Database.Database): AppModelDB {
         primary key autoincrement,
     name nvarchar,
     alias nvarchar ,
+    description nvarchar ,
     file nvarchar   not null,
     categoryId integer default 0,
     iconFile nvarchar ,
-    totalTime nvarchar default 0
+    totalTime integer default 0
 );
 `)
     },
@@ -36,12 +37,12 @@ function useDB(db: Database.Database): AppModelDB {
       return select
     },
     insertAppModel(appQuery: AppModel) {
-      const insertStmt = db.prepare(`insert into AppModel (name, alias, file, categoryId, iconFile, totalTime) values (?, ?, ?, ?, ?, ?)`)
-      insertStmt.run(appQuery.name, appQuery.alias, appQuery.file, appQuery.categoryId, appQuery.iconFile, appQuery.totalTime)
+      const insertStmt = db.prepare(`insert into AppModel (name, alias, description,file, categoryId, iconFile, totalTime) values (?, ?, ?,?, ?, ?, ?)`)
+      insertStmt.run(appQuery.name, appQuery.alias, appQuery.description, appQuery.file, appQuery.categoryId, appQuery.iconFile, appQuery.totalTime)
     },
     updateAppModel(appQuery: AppModel) {
-      const updateStmt = db.prepare(`update AppModel set name = ?, alias = ?, file = ?, categoryId = ?, iconFile = ?, totalTime = ? where id = ?`)
-      updateStmt.run(appQuery.name, appQuery.alias, appQuery.file, appQuery.categoryId, appQuery.iconFile, appQuery.totalTime)
+      const updateStmt = db.prepare(`update AppModel set name = ?, alias = ?, description = ? ,file = ?, categoryId = ?, iconFile = ?, totalTime = ? where id = ?`)
+      updateStmt.run(appQuery.name, appQuery.alias, appQuery.description, appQuery.file, appQuery.categoryId, appQuery.iconFile, appQuery.totalTime)
     },
     deleteAppModel(id) {
       const deleteStmt = db.prepare(`delete from AppModel where id = ?`)
@@ -50,6 +51,10 @@ function useDB(db: Database.Database): AppModelDB {
     getAllAppModel() {
       const select = db.prepare(`select * from AppModel`).all()
       return select
+    },
+    clearAllData() {
+      const deleteStmt = db.prepare(`delete from AppModel`)
+      deleteStmt.run()
     },
   }
 }

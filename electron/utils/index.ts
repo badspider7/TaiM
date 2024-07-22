@@ -8,16 +8,10 @@ export function startRecord() {
   windowTimeTracker.start()
 }
 
-// export function getIcon(appPath: string) {
-//   // 判断不同平台
-//   if (platform.windows()) {
-//     fileDisplay(appPath)
-//   }
-// }
-
-export function getIcon(app) {
+export async function getIcon(app): Promise<string> {
   // 判断不同平台
   if (platform.windows()) {
-    getWinIco(app)
+    const icon = await getWinIco(app)
+    return icon
   }
 }
