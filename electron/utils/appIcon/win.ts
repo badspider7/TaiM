@@ -12,13 +12,13 @@ export async function getWinIco(appInfo): Promise<string> {
   return new Promise(async (resolve, reject) => {
     try {
       await mkdir(icondir, { recursive: true }).catch((err) => {
-        if (err.code !== 'EEXIST')
+        if (err.code !== 'EEXIST') {
           throw err
+        }
       })
 
       const buffer = fileIcon(appInfo.path, 32)
       const iconpath: string = path.join(icondir, `${appInfo.name}.png`)
-
       try {
         await access(iconpath, constants.W_OK)
       }
@@ -26,13 +26,12 @@ export async function getWinIco(appInfo): Promise<string> {
         if (err.code !== 'ENOENT') {
           throw err
         }
-        await writeFilePromise(iconpath, buffer)
-        resolve(iconpath)
       }
+      await writeFilePromise(iconpath, buffer)
+      resolve(iconpath)
     }
     catch (e) {
       reject(e)
-      console.error(e, appInfo.path)
     }
   })
 }

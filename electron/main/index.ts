@@ -76,7 +76,8 @@ export async function createWindow() {
     win.loadFile(indexHtml)
   }
 
-  win.once('ready-to-show', () => win?.show())
+  // TODO: 写后台的时候不需要显示页面，到时候记得打开
+  // win.once('ready-to-show', () => win?.show())
 
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString())

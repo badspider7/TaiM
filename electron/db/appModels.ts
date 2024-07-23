@@ -4,20 +4,22 @@ import { getDB } from './better-sqlite3'
 import type { DBConfig } from './index'
 
 export interface AppModelDB extends DBConfig {
-  queryAppModel: (id: number) => AppModel
+  getAppModel: (name: string) => AppModel | undefined
   insertAppModel: (appQuery: AppModel) => void
   updateAppModel: (appQuery: AppModel) => void
+  updateTotalTime: (name: string, totalTime: number) => void
   deleteAppModel: (id: number) => void
   getAllAppModel: () => AppModel[]
   clearAllData: () => void
+  getAppModelIdByName: (name: string) => number
 }
 
 function useDB(db: Database.Database): AppModelDB {
   return {
-    tableName: 'appModel',
-    tableVersion: 1,
+    tableName: 'appModels',
+    tableVersion: 2,
     initTableIfNotExists() {
-      db.exec(`create table IF NOT EXISTS AppModel
+      db.exec(`create table IF NOT EXISTS AppModels
 (
     id integer    not null
         primary key autoincrement,
@@ -32,8 +34,8 @@ function useDB(db: Database.Database): AppModelDB {
 `)
     },
     initData() { },
-    queryAppModel(id) {
-      const select = db.prepare(`select * from AppModel where id = ?`).get(id)
+    getAppModel(name) {
+      const select = db.prepare(`select * from AppModel where name = ?`).get(name)
       return select
     },
     insertAppModel(appQuery: AppModel) {
@@ -43,6 +45,9 @@ function useDB(db: Database.Database): AppModelDB {
     updateAppModel(appQuery: AppModel) {
       const updateStmt = db.prepare(`update AppModel set name = ?, alias = ?, description = ? ,file = ?, categoryId = ?, iconFile = ?, totalTime = ? where id = ?`)
       updateStmt.run(appQuery.name, appQuery.alias, appQuery.description, appQuery.file, appQuery.categoryId, appQuery.iconFile, appQuery.totalTime)
+    },
+    updateTotalTime(name, totalTime) {
+      db.prepare(`update AppModel set totalTime = ? where name = ?`).run(totalTime, name)
     },
     deleteAppModel(id) {
       const deleteStmt = db.prepare(`delete from AppModel where id = ?`)
@@ -55,6 +60,10 @@ function useDB(db: Database.Database): AppModelDB {
     clearAllData() {
       const deleteStmt = db.prepare(`delete from AppModel`)
       deleteStmt.run()
+    },
+    getAppModelIdByName(name: string) {
+      const select = db.prepare(`select id from AppModel where name = ?`).get(name)
+      return select.id
     },
   }
 }

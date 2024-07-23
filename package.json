@@ -36,6 +36,7 @@
     "clsx": "^2.1.1",
     "extract-file-icon": "^0.3.2",
     "get-windows": "^9.1.1",
+    "lru-cache": "^11.0.0",
     "lucide-vue-next": "^0.408.0",
     "radix-vue": "^1.9.1",
     "tailwind-merge": "^2.4.0",

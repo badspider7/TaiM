@@ -17,7 +17,6 @@ interface windowInfo {
 }
 
 // 使用时间统计
-const timeMap = new Map<string, number>()
 let timerId = null
 
 // 启动定时器
@@ -37,18 +36,22 @@ function stopTimer() {
 }
 
 // 更新当前活动窗口的使用时间
-async function updateTime() {
+export async function updateTime() {
   try {
     const windowInfo: windowInfo = await activeWindow()
     if (windowInfo && windowInfo.owner && windowInfo.owner.name) {
       const appName = windowInfo.owner.name
-      if (timeMap.has(appName)) {
-        timeMap.set(appName, timeMap.get(appName) + 1)
+
+      let currentTotalTime = 0
+      const existingApp = await appModelDB.getAppModel(appName)
+      if (existingApp) {
+        currentTotalTime = existingApp.totalTime
+        const newTotalTime = currentTotalTime + 1
+        appModelDB.updateTotalTime(appName, newTotalTime)
       }
       else {
         const { path, name } = windowInfo.owner
         const iconFile = await getIcon({ path, name })
-        timeMap.set(appName, 1)
         const appQuery: AppModel = {
           name,
           alias: '',
@@ -73,4 +76,36 @@ export const windowTimeTracker = {
   start: startTimer,
   stop: stopTimer,
   // 可以添加其他功能，如获取总时间、重置时间等
+}
+
+export async function handleFocusWin(appInfo) {
+  try {
+    if (appInfo && appInfo.name) {
+      const appName = appInfo.name
+      const duration = Math.round(appInfo.duration)
+      const existingApp = await appModelDB.getAppModel(appName)
+      if (existingApp) {
+        const currentTotalTime = existingApp.totalTime
+        const newTotalTime = currentTotalTime + duration
+        appModelDB.updateTotalTime(appName, newTotalTime)
+      }
+      else {
+        const { file, name, iconFile, actionDes } = appInfo
+        const appQuery: AppModel = {
+          name,
+          alias: '',
+          description: actionDes,
+          file,
+          categoryId: 0,
+          iconFile,
+          totalTime: duration,
+        }
+        appModelDB.insertAppModel(appQuery)
+      }
+    }
+  }
+  catch (error) {
+    console.log('error===')
+    logger.debug('Error updating window time:', error)
+  }
 }
