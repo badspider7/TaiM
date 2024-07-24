@@ -119,7 +119,7 @@ class TimeTracker {
     else {
       cache.set(usageRecord.name, usageRecord)
     }
-    this.currentSession = undefined
+    this.currentSession = null
     // console.log(cache.get(usageRecord.name))
   }
 }

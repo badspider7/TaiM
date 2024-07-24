@@ -9,5 +9,6 @@ export default antfu({
     'jsonc/no-useless-escape': 'off',
     '@typescript-eslint/no-unused-vars': ['off'],
     '@typescript-eslint/no-empty-object-type': 'off',
+    'no-async-promise-executor': 'off',
   },
 })

@@ -11,7 +11,7 @@ export interface AppModelDB extends DBConfig {
   deleteAppModel: (id: number) => void
   getAllAppModel: () => AppModel[]
   clearAllData: () => void
-  getAppModelIdByName: (name: string) => number
+  getAppModelIdByName: (name: string) => number | undefined
 }
 
 function useDB(db: Database.Database): AppModelDB {
@@ -62,7 +62,7 @@ function useDB(db: Database.Database): AppModelDB {
     },
     getAppModelIdByName(name: string) {
       const select = db.prepare(`select id from AppModels where name = ?`).get(name)
-      return select.id
+      return select?.id
     },
   }
 }
