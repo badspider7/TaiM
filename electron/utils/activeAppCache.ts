@@ -1,4 +1,4 @@
-import { handleFocusWin } from '../handle/handleFocusWin'
+import { handleDailyLog, handleFocusWin, handleHoursLog } from '../handle/handleFocusWin'
 
 interface CacheItem<T> {
   value: T
@@ -30,10 +30,12 @@ class ExpiringCache<K, T> {
 
   // 定时保存数据到数据库的方法
   private saveDataToDatabase = () => {
-    console.log('cache===', this.cache)
     this.cache.forEach((item, key) => {
+      console.log('saveDataToDatabase', item.value)
       // 统计 totalTime
       handleFocusWin(item.value)
+      handleHoursLog(item.value)
+      handleDailyLog(item.value)
     })
     // 如果需要，可以在这里清除已过期的项，或者维护一个单独的过期项列表
     this.clearCache()
@@ -61,4 +63,4 @@ class ExpiringCache<K, T> {
   }
 }
 
-export const cache = new ExpiringCache(1000 * 60) // 每1分钟把内存缓存数据存入到数据库
+export const cache = new ExpiringCache(1000 * 10) // 每1分钟把内存缓存数据存入到数据库

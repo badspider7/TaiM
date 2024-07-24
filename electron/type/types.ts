@@ -1,4 +1,5 @@
 export interface AppModel {
+  id?: number
   name: string
   alias: string
   description: string
@@ -9,8 +10,15 @@ export interface AppModel {
 }
 
 export interface HoursLogModels {
-  id: number
-  dataTime: string
+  id?: number
+  hoursTime: string
+  time: number
+  appModelId: number
+}
+
+export interface DailyLogModels {
+  id?: number
+  dayTime: string
   time: number
   appModelId: number
 }

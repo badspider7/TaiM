@@ -1,13 +1,14 @@
 import logger from '../logger'
 import tableVersionDB from './tableVersion'
 import appModelDB from './appModels'
+import hoursLogModelDB from './hoursLogModels'
+import dailyLogModelDB from './dailyLogModels'
 
 export interface DBConfig {
   // eslint-disable-next-line ts/no-unsafe-function-type
   initTableIfNotExists: Function
   tableName: string
   tableVersion: number
-  initData?: () => void
 }
 
 export function initDb() {
@@ -23,14 +24,12 @@ export function initDb() {
   logger.info('数据库开始初始化')
   tableVersionDB.initTableIfNotExists()
   // 每个表都手动记录版本号，为以后表结构变更更新提供信息
-  const DBConfigs = [appModelDB, tableVersionDB]
+  const DBConfigs = [tableVersionDB, appModelDB, hoursLogModelDB, dailyLogModelDB]
   DBConfigs.forEach((item: DBConfig) => {
     const result = tableVersionDB.initTableVersionRecord(item.tableName, 1)
     if (result.changes) {
       // 如果插入版本号成功，说明该表没建立过
       item.initTableIfNotExists()
-      // eslint-disable-next-line ts/no-unused-expressions
-      item.initData && item.initData()
     }
     else {
       // 这里取版本号，做对应策略表更新

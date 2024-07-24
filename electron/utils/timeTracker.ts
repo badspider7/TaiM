@@ -113,7 +113,8 @@ class TimeTracker {
     if (cache.get(usageRecord.name)) {
       const lastDuration = (cache.get(usageRecord.name) as usageRecord).duration
       const duration = Number((lastDuration + usageRecord.duration).toFixed(2))
-      cache.set(usageRecord.name, { ...usageRecord, duration })
+      usageRecord.duration = duration
+      cache.set(usageRecord.name, usageRecord)
     }
     else {
       cache.set(usageRecord.name, usageRecord)
