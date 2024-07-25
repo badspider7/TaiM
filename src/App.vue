@@ -1,6 +1,13 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import Header from '@/components/layout/Header.vue'
 import SideBar from '@/components/layout/SideBar.vue'
+import { useAppInfo } from '@/store/app'
+
+onMounted(() => {
+  const appInfo = useAppInfo()
+  appInfo.getAppInfo()
+})
 </script>
 
 <template>

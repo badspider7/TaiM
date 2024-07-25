@@ -45,7 +45,7 @@ export function handleHoursLog(appInfo) {
     try {
       if (appInfo && appInfo.name) {
         const appModelID = await appModelDB.getAppModelIdByName(appInfo.name)
-        const hours = new Date(appInfo.startTime).getHours()
+        const hours = new Date(appInfo.startTime).getHours().toString().padStart(2, '0')
 
         const day = appInfo.startTime.split(' ')[0]
         const time = `${day} ${hours}:00:00`

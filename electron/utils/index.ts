@@ -5,7 +5,6 @@ import TimerListener from './timeTracker'
 import { getWinIco } from './appIcon/win'
 
 export function startRecord() {
-  console.log('startRecord...')
   TimerListener.start()
 }
 

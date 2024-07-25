@@ -13,6 +13,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@@/*": [
+        "./electron/*"
       ]
     },
     "resolveJsonModule": true,

@@ -7,6 +7,7 @@ export interface DailyLogDb extends DBConfig {
   getAllData: () => DailyLogModels[]
   getSingleData: (time: string, appModelId: number) => DailyLogModels | undefined
   getDataFromHoursDB: (date: string, appModelId: number) => void
+  getDataByTime: (time: string) => DailyLogModels[]
   insertData: (dataQuery: DailyLogModels) => void
   updateTime: (time: string, id: number) => void
   deleteData: (time: string, appModelId: number) => void
@@ -47,6 +48,10 @@ function useDB(db: Database.Database): DailyLogDb {
           AND DATE(hoursTime) = ?; 
     `)
       const select = sqltmt.all(appModelId, date)
+      return select
+    },
+    getDataByTime(time) {
+      const select = db.prepare(`select * from DailyLogModels where dayTime = ?`).all(time)
       return select
     },
     insertData(dataQuery) {
