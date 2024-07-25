@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { AccessTime20Regular, ArrowTrendingLines20Regular, StoreMicrosoft16Regular } from '@vicons/fluent'
 import type { AppData } from '@@/type/types'
 import Card from './Card.vue'
@@ -18,14 +18,12 @@ const activeTab = ref('today')
 
 const totalTime = ref(0)
 const totalApps = ref(0)
-
 const longestApp = ref<AppData>({} as AppData)
 
-onMounted(() => {
-  totalTime.value = props.appData.reduce((acc, cur) => acc + cur.totalTime, 0)
-  totalApps.value = props.appData.length
-  longestApp.value = props.appData.reduce((acc, cur) => cur.totalTime > acc.totalTime ? cur : acc, props.appData[0])
-  console.log('longestApp', totalTime)
+watch(() => props.appData, (newVal) => {
+  totalTime.value = newVal.reduce((acc, cur) => acc + cur.totalTime, 0)
+  totalApps.value = newVal.length
+  longestApp.value = newVal.reduce((acc, cur) => cur.totalTime > acc.totalTime ? cur : acc, newVal[0])
 })
 
 function formatTime(second: number) {
