@@ -28,8 +28,8 @@ function formatTime(second: number) {
 // 计算宽度
 function getProgressWidth(second: number) {
   const first = frequentlyApp.value[0].totalTime
-  const rate = `${(second / first) * 100}%`
-  console.log('rate', rate)
+  const rate = `${Math.floor((second / first) * 100)}%`
+  return rate
 }
 </script>
 
@@ -47,7 +47,7 @@ function getProgressWidth(second: number) {
           <div class="app-name text-gray-600">
             {{ item.name }}
           </div>
-          <Progress :model-value="100" class="progress " />
+          <Progress :model-value="100" class="progress " :style="{ width: getProgressWidth(item.totalTime) }" />
         </div>
         <div class="usage-time">
           {{ formatTime(item.totalTime) }}
@@ -99,5 +99,22 @@ function getProgressWidth(second: number) {
         align-self: end;
         margin-left: 10px;
     }
+}
+
+.app-info:hover{
+    cursor: pointer;
+  .app-icon{
+    box-shadow: 3px 2px 3px 0px #cccc;
+    transition: all 0.5s ease-in-out;
+  }
+  .app-name{
+    color:rgb(248, 20, 61)
+  }
+  :deep(.bg-primary){
+    background-color: rgb(248, 20, 61) !important;
+  }
+   .usage-time{
+    color: rgb(248, 20, 61)
+   }
 }
 </style>
