@@ -62,6 +62,7 @@ export async function createWindow() {
       preload,
       nodeIntegration: true,
       contextIsolation: true,
+      webSecurity: false,
     },
     titleBarStyle: 'hidden',
     show: false,
@@ -76,7 +77,10 @@ export async function createWindow() {
     win.loadFile(indexHtml)
   }
 
-  win.once('ready-to-show', () => win?.show())
+  win.once('ready-to-show', () => {
+    win?.show()
+    win.setMinimumSize(800, 600)
+  })
 
   win.webContents.on('did-finish-load', () => {
     win?.webContents.send('main-process-message', new Date().toLocaleString())

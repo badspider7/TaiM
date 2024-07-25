@@ -1,5 +1,3 @@
-// import { windowTimeTracker } from '../handle/handleFocusWin'
-import { Time } from '../utils/timerEvent'
 import platform from '../const/getPlatform'
 import TimerListener from './timeTracker'
 import { getWinIco } from './appIcon/win'

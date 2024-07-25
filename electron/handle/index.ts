@@ -2,7 +2,7 @@ import type { BrowserWindow } from 'electron'
 import { isMaximized, setupTitleBarHandler } from './handleTitleBar'
 import { setupTray } from './handleTray'
 import { getAppInfo, getTodayUsageData } from './handleUsageData'
-import '../utils/timerEvent'
+import '../../src/utils/timerEvent'
 
 export function setupHandle(win: BrowserWindow) {
   setupTitleBarHandler(win)

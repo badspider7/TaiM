@@ -15,5 +15,5 @@
     "vite.config.ts",
     "package.json",
     "electron"
-  ]
+, "src/utils/timerEvent.ts"  ]
 }

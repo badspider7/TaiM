@@ -1,16 +1,19 @@
 <script setup lang='ts'>
+import { ArrowDown20Regular, ArrowUp20Regular } from '@vicons/fluent'
+import { computed } from 'vue'
+
 const props = defineProps({
   title: {
     type: String,
     default: '',
   },
   data: {
-    type: Number,
-    default: 0,
+    type: [String, Number],
+    default: '',
   },
-  rate: {
-    type: Number,
-    default: 0,
+  previousDelta: {
+    type: String,
+    default: '',
   },
   unit: {
     type: String,
@@ -19,6 +22,11 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+})
+
+// 判断是否大于0
+const isPositive = computed(() => {
+  return Number(props.previousDelta) >= 0
 })
 </script>
 
@@ -36,8 +44,12 @@ const props = defineProps({
           <span class="text-2xl ">{{ data }}</span>
           <span class=" text-sm text-gray-400">{{ unit }}</span>
         </div>
-        <div v-if="!showAppIcon" class="rate  text-red-500">
-          {{ rate }}%
+        <div v-if="!showAppIcon" class="rate flex flex-row items-center " :class="[isPositive ? 'text-green-500' : 'text-red-500']">
+          <span>
+            <ArrowDown20Regular v-if="!isPositive" class="w-4 h-4" />
+            <ArrowUp20Regular v-else class="w-4 h-4" />
+          </span>
+          {{ previousDelta }}
         </div>
         <div v-else>
           <slot name="appIcon" />

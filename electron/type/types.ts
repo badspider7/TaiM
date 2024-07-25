@@ -22,3 +22,15 @@ export interface DailyLogModels {
   time: number
   appModelId: number
 }
+
+export interface AppData {
+  id?: number
+  name: string
+  alias: string
+  categoryId: number
+  date: string
+  description: string
+  file: string
+  iconFile: string
+  totalTime: number
+}

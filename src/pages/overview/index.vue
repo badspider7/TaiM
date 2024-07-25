@@ -1,30 +1,21 @@
 <script setup lang='ts'>
 import { onMounted, ref } from 'vue'
-import type { AppModel, DailyLogModels } from '@@/type/types'
+import type { AppData, AppModel, DailyLogModels } from '@@/type/types'
+import type { Ref } from 'vue'
 import TapBar from './tabBar.vue'
+import AppList from './FrequentApp.vue'
 import getUsageTimeApi from '@/api/getUsageTime'
 import { useAppInfo } from '@/store/app'
 
 const appStore = useAppInfo()
-
-interface AppData {
-  alias: string
-  categoryId: number
-  date: string
-  description: string
-  file: string
-  iconFile: string
-  id?: number
-  name: string
-  totalTime: number
-}
+const appData: Ref<AppData[]> = ref([])
 
 onMounted(async () => {
   const todayDate = formatDateTime(new Date().toLocaleString())
   const todayTimeList = await getUsageTimeApi.getTodayTime(todayDate)
   const appInfo = appStore.appInfoList
-  const appData = getTodayUsageTimeInfo(todayTimeList, appInfo)
-  console.log(appData)
+  appData.value = getTodayUsageTimeInfo(todayTimeList, appInfo)
+  console.log('appData===', appData)
 })
 
 function formatDateTime(dateTimeString: string) {
@@ -73,11 +64,14 @@ function getTodayUsageTimeInfo(TimeList: DailyLogModels[], appInfo: AppModel[]) 
       概览
     </div>
     <div class="choose-time mt-5">
-      <TapBar />
+      <TapBar :app-data="appData" />
+      <AppList :app-data="appData" />
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-
+.choose-time{
+  height:calc(100% - 50px);
+}
 </style>
