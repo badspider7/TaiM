@@ -70,8 +70,9 @@ const TimeDelta = computed(() => {
   if (lastTotalTime.value <= 0) {
     return 100
   }
-  const delta = 1 - (totalTime.value / lastTotalTime.value)
-  return Math.abs(delta * 100).toFixed(2) as unknown as number // TypeScript 类型断言
+  let delta = 1 - Number((totalTime.value / lastTotalTime.value).toFixed(2))
+  delta = delta >= 1 ? delta : -delta
+  return Number((delta * 100).toFixed(2))
 })
 
 function tabChange(activeTab: string) {

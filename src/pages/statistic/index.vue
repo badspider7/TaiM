@@ -3,7 +3,11 @@ import { ref } from 'vue'
 </script>
 
 <template>
-  <div>setting</div>
+  <div class="statistic-wrap">
+    <div class="title font-middle text-lg">
+      统计
+    </div>
+  </div>
 </template>
 
 <style lang="scss" scoped>

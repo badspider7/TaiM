@@ -3,8 +3,10 @@ import { ref } from 'vue'
 </script>
 
 <template>
-  <div>
-    统计
+  <div class="statistic-wrap">
+    <div class="title font-middle text-lg">
+      详细
+    </div>
   </div>
 </template>
 
