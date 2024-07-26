@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { computed, onMounted, ref } from 'vue'
+import { computed } from 'vue'
 import type { AppData } from '@@/type/types'
 import { Progress } from '@/components/ui/progress'
 import { Time } from '@/utils/timerEvent'
@@ -17,10 +17,6 @@ const frequentlyApp = computed(() => {
   return tempAppInfo.sort((a, b) => b.totalTime - a.totalTime).slice(0, 5)
 })
 
-onMounted(() => {
-  console.log(frequentlyApp)
-})
-
 function formatTime(second: number) {
   return Time.toString(second)
 }
@@ -31,6 +27,10 @@ function getProgressWidth(second: number) {
   const rate = `${Math.floor((second / first) * 100)}%`
   return rate
 }
+
+function viewDetail() {
+  console.log('查看详情')
+}
 </script>
 
 <template>
@@ -39,7 +39,7 @@ function getProgressWidth(second: number) {
       最为频繁
     </div>
     <div class="app-list">
-      <div v-for="item in frequentlyApp" :key="item.id" class="app-info">
+      <div v-for="item in frequentlyApp" :key="item.id" class="app-info" @click="viewDetail">
         <div class="app-icon">
           <img :src="item.iconFile" alt="" class="w-5 h-5">
         </div>
@@ -82,6 +82,7 @@ function getProgressWidth(second: number) {
         background-color: #f0f0f0;
         margin-right: 16px;
         border-radius: 4px;
+        border: 2px solid transparent;
     }
     .show-data{
         flex:1;
@@ -104,14 +105,15 @@ function getProgressWidth(second: number) {
 .app-info:hover{
     cursor: pointer;
   .app-icon{
-    box-shadow: 3px 2px 3px 0px #cccc;
-    transition: all 0.5s ease-in-out;
+    // box-shadow: 3px 2px 3px 0px #cccc;
+    border: 2px solid rgb(248, 20, 61);
+    transition: all 1s ease-out;
   }
   .app-name{
     color:rgb(248, 20, 61)
   }
   :deep(.bg-primary){
-    background-color: rgb(248, 20, 61) !important;
+    background-color: rgb(233, 56, 88) !important;
   }
    .usage-time{
     color: rgb(248, 20, 61)

@@ -6,23 +6,16 @@ import TapBar from './tabBar.vue'
 import AppList from './FrequentApp.vue'
 import getUsageTimeApi from '@/api/getUsageTime'
 import { useAppInfo } from '@/store/app'
+import { formatDateTime, handleTimeRangeData } from '@/utils'
+import { Time } from '@/utils/timerEvent'
 
 const appStore = useAppInfo()
 const appData: Ref<AppData[]> = ref([])
+const appInfo = appStore.appInfoList
 
-onMounted(async () => {
-  const todayDate = formatDateTime(new Date().toLocaleString())
-  const todayTimeList = await getUsageTimeApi.getTodayTime(todayDate)
-  const appInfo = appStore.appInfoList
-  appData.value = getTodayUsageTimeInfo(todayTimeList, appInfo)
-  console.log('appData===', appData)
+onMounted(() => {
+  getTodayAppData()
 })
-
-function formatDateTime(dateTimeString: string) {
-  return dateTimeString.replace(/^(\d{4})\/(\d{1,2})\/(\d{1,2}) (\d{2}):(\d{2}):(\d{2})$/, (match, year, month, day, hour, minute, second) => {
-    return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')} 00:00:00`
-  })
-}
 
 function getTodayUsageTimeInfo(TimeList: DailyLogModels[], appInfo: AppModel[]) {
   // 创建一个映射，以快速查找应用信息
@@ -56,6 +49,28 @@ function getTodayUsageTimeInfo(TimeList: DailyLogModels[], appInfo: AppModel[]) 
 
   return appDataList
 }
+
+async function getTodayAppData() {
+  const todayDate = formatDateTime(new Date().toLocaleString())
+  const todayTimeList = await getUsageTimeApi.getDailyTime(todayDate)
+  appData.value = getTodayUsageTimeInfo(todayTimeList, appInfo)
+}
+
+async function getWeekAppData() {
+  const { start, end } = Time.getThisWeekDate()
+  const weekData: DailyLogModels[] = await handleTimeRangeData(start, end)
+  appData.value = getTodayUsageTimeInfo(weekData, appInfo)
+  console.log(' appData.value', appData.value)
+}
+
+function tabChange(activeTab: string) {
+  if (activeTab === 'today') {
+    getTodayAppData()
+  }
+  else if (activeTab === 'week') {
+    getWeekAppData()
+  }
+}
 </script>
 
 <template>
@@ -64,7 +79,7 @@ function getTodayUsageTimeInfo(TimeList: DailyLogModels[], appInfo: AppModel[]) 
       概览
     </div>
     <div class="choose-time mt-5">
-      <TapBar :app-data="appData" />
+      <TapBar :app-data="appData" @tab-change="tabChange" />
       <AppList :app-data="appData" />
     </div>
   </div>

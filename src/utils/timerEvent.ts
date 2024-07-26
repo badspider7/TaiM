@@ -31,25 +31,46 @@ export class Time {
   static getThisWeekDate() {
     const today = new Date()
     const dayOfWeek = today.getDay()
-    const weekStartDate = new Date(today)
-    weekStartDate.setDate(weekStartDate.getDate() - dayOfWeek + 1)
-    weekStartDate.setHours(0, 0, 0, 0) // Reset time to start of day
 
-    const weekEndDate = new Date(weekStartDate)
-    weekEndDate.setDate(weekEndDate.getDate() + 6)
-    weekEndDate.setHours(23, 59, 59, 999) // Set time to end of day
+    const startOfWeek = new Date(today)
+    startOfWeek.setDate(today.getDate() - dayOfWeek + 1)
 
-    return [weekStartDate, weekEndDate]
+    const endOfWeek = new Date(startOfWeek)
+    endOfWeek.setDate(endOfWeek.getDate() + 6)
+
+    function formatDate(date) {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day} 00:00:00`
+    }
+    return {
+      start: formatDate(startOfWeek),
+      end: formatDate(endOfWeek),
+    }
   }
 
   static getLastWeekDate() {
-    const [start, end] = Time.getThisWeekDate()
-    const lastWeekStartDate = new Date(start)
-    lastWeekStartDate.setDate(lastWeekStartDate.getDate() - 7)
-    const lastWeekEndDate = new Date(end)
-    lastWeekEndDate.setDate(lastWeekEndDate.getDate() - 7)
+    const today = new Date()
+    const dayOfWeek = today.getDay()
 
-    return [lastWeekStartDate, lastWeekEndDate]
+    const startOfLastWeek = new Date(today)
+    startOfLastWeek.setDate(today.getDate() - dayOfWeek - 6)
+
+    const endOfLastWeek = new Date(startOfLastWeek)
+    endOfLastWeek.setDate(endOfLastWeek.getDate() + 6)
+
+    function formatDate(date: Date) {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day} 00:00:00`
+    }
+
+    return {
+      start: formatDate(startOfLastWeek),
+      end: formatDate(endOfLastWeek),
+    }
   }
 
   static getMonthDate(date) {
@@ -74,12 +95,15 @@ export class Time {
 
     return [dateStart, dateEnd]
   }
-}
 
-// Example usage
-// console.log(Time.toHoursString(3661)) // Should print "1.02"
-// console.log(Time.toString(3661)) // Should print "2分钟3秒"
-// console.log(Time.getThisWeekDate()) // Prints current week's start and end dates
-// console.log(Time.getLastWeekDate()) // Prints last week's start and end dates
-// console.log(Time.getMonthDate(new Date())) // Prints current month's start and end dates
-// console.log(Time.getYearDate(new Date())) // Prints current year's start and end dates
+  static getYesterdayDate() {
+    const today = new Date()
+    const oneDay = 24 * 60 * 60 * 1000
+    const yesterday = new Date(today.getTime() - oneDay)
+    const formattedYesterday = `${yesterday.getFullYear()}-${
+                             (`0${yesterday.getMonth() + 1}`).slice(-2)}-${
+                             (`0${yesterday.getDate()}`).slice(-2)} 00:00:00`
+
+    return formattedYesterday
+  }
+}

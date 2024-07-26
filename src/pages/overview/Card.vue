@@ -12,6 +12,10 @@ const props = defineProps({
     default: '',
   },
   previousDelta: {
+    type: Number,
+    default: 0,
+  },
+  previousUnit: {
     type: String,
     default: '',
   },
@@ -49,7 +53,7 @@ const isPositive = computed(() => {
             <ArrowDown20Regular v-if="!isPositive" class="w-4 h-4" />
             <ArrowUp20Regular v-else class="w-4 h-4" />
           </span>
-          {{ previousDelta }}
+          {{ Math.abs(previousDelta) + previousUnit }}
         </div>
         <div v-else>
           <slot name="appIcon" />
