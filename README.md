@@ -1,6 +1,10 @@
+> [!WARNING]
+> 目前还是开发阶段，只支持windows，功能还在完善中，欢迎提交issue。
+
 ## TaiM！
 
-跨平台的软件时间统计软件，目前只支持Windows。
+`windows` 的时间统计软件，记录和统计你每天使用软件的时间，帮助你更好的管理时间。
+
 ![screenshot](./screenshot/shortcut.png)
 
 ## 功能
@@ -31,6 +35,11 @@
  所有的数据都保存在本地，使用的`better-sqlite3`
 
  前端框架使用了`Vue3`、`Vite5`、`Tailwindcss`、`shadcn/vue`
+
+ ## 鸣谢
+ 页面UI和逻辑的想法来源于 ---  [Tai](https://github.com/Planshit/Tai)
+
+ 监测当前活动页面使用的插件 --- [get-windows](https://github.com/sindresorhus/get-windows)
 
 ## 贡献
 欢迎提交PR，或者提交issue。

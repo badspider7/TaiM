@@ -94,6 +94,9 @@ class TimeTracker {
       return
 
     const { name, startTime, startFTime, file, iconFile, actionDes } = this.currentSession
+    // 如果是切换到桌面的话就不记录（桌面也是windows 资源管理器 中的一部分）
+    if (name === 'Windows 资源管理器' && !actionDes)
+      return
     const endFTime = getCurrentFTime()
     const endTime = new Date()
 
