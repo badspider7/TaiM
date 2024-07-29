@@ -48,7 +48,7 @@ function getCurrentFTime() {
   return `${year}-${month}-${day} ${hour}:${minute}:${second}`
 }
 
-const SLEEP_TIME = 5 * 60 // 5 分钟
+const SLEEP_TIME = 60 * 5 // 5 分钟
 
 class TimeTracker {
   private currentSession?: Session
@@ -76,12 +76,14 @@ class TimeTracker {
   }
 
   sleep() {
+    logger.info('进入休眠')
     this.isSleeping = true
     this.stop()
     cache.stopSaveInterval()
   }
 
   wake() {
+    logger.info('唤醒')
     this.isSleeping = false
     cache.startSaveInterval()
     this.start()
