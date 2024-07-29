@@ -4,7 +4,7 @@ import path from 'node:path'
 import os from 'node:os'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { setupHandle } from '../handle'
-import { startRecord } from '../utils'
+import { clearAllTimer, startRecord } from '../utils'
 import logger from '../logger'
 import { initDb } from '../db'
 
@@ -98,6 +98,7 @@ export async function createWindow() {
 }
 
 app.on('window-all-closed', () => {
+  clearAllTimer()
   win = null
   if (process.platform !== 'darwin')
     app.quit()

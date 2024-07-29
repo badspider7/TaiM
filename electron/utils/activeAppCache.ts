@@ -1,4 +1,4 @@
-import { executeMethodsInOrder, handleDailyLog, handleFocusWin, handleHoursLog } from '../handle/handleFocusWin'
+import { executeMethodsInOrder } from '../handle/handleFocusWin'
 
 interface CacheItem<T> {
   value: T
@@ -34,29 +34,29 @@ class ExpiringCache<K, T> {
       // 统计 totalTime
       executeMethodsInOrder(item.value)
     })
-    // 如果需要，可以在这里清除已过期的项，或者维护一个单独的过期项列表
     this.clearCache()
   }
 
   // 启动定时保存间隔
-  private startSaveInterval = () => {
+  startSaveInterval = () => {
     if (this.saveTimerId !== null) {
       clearInterval(this.saveTimerId)
+      this.clearCache()
     }
     this.saveTimerId = setInterval(this.saveDataToDatabase, this.saveInterval)
   }
 
-  // 停止定时保存间隔（如果需要的话）
+  // 停止定时保存间隔
   stopSaveInterval = () => {
     if (this.saveTimerId !== null) {
       clearInterval(this.saveTimerId)
       this.saveTimerId = null
+      this.saveDataToDatabase()
       this.clearCache()
-      this.cache = null
     }
   }
 
-  // 如果需要，可以添加清理整个缓存的方法
+  // 清理整个缓存
   clearCache = () => {
     this.cache.clear()
   }
