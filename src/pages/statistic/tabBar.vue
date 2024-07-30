@@ -2,6 +2,12 @@
 import { ref } from 'vue'
 import Calendar from './components/Calendar.vue'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 
 const activeTab = ref('day')
 
@@ -27,8 +33,18 @@ function tabChange(type: string) {
           按年
         </TabsTrigger>
       </TabsList>
-      <div class="container">
-        <Calendar />
+      <div class="date-container mt-2">
+        <div class="date-btn">
+          <Popover>
+            <PopoverTrigger>
+              <Button>今天</Button>
+              <span class="week-range ml-3 text-sm">2024年7月21号 到 2024年7月30号</span>
+            </PopoverTrigger>
+            <PopoverContent>
+              <Calendar />
+            </PopoverContent>
+          </Popover>
+        </div>
       </div>
     </Tabs>
   </div>

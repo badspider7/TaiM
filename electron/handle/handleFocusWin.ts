@@ -9,7 +9,7 @@ export function handleFocusWin(appInfo) {
     try {
       if (appInfo && appInfo.name) {
         const appName = appInfo.name
-        const duration = Math.round(appInfo.duration)
+        const duration: number = Math.round(appInfo.duration)
         const existingApp = await appModelDB.getAppModel(appName)
         if (existingApp) {
           const currentTotalTime = existingApp.totalTime
@@ -91,7 +91,7 @@ export function handleDailyLog(appInfo) {
           resolve()
         }
         else {
-        // 更新时间
+          // 更新时间
           dailyLogModelDB.updateTime(hoursList[0].dayTime, res.id)
           resolve()
         }
@@ -105,6 +105,7 @@ export function handleDailyLog(appInfo) {
 }
 
 export async function executeMethodsInOrder(appInfo) {
+  logger.info('放入数据库中:', appInfo.name, appInfo.duration)
   try {
     await handleFocusWin(appInfo)
     await handleHoursLog(appInfo)

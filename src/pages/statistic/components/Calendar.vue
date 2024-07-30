@@ -29,6 +29,11 @@ const delegatedProps = computed(() => {
   return delegated
 })
 
+const isDateUnavailable: CalendarRootProps['isDateUnavailable'] = (date) => {
+  console.log('date', date)
+  return date.day === 17 || date.day === 18
+}
+
 const placeholder = useVModel(props, 'modelValue', emits, {
   passive: true,
   defaultValue: today(getLocalTimeZone()),
@@ -36,7 +41,7 @@ const placeholder = useVModel(props, 'modelValue', emits, {
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
 
-const formatter = useDateFormatter('en')
+const formatter = useDateFormatter('zh-TW')
 </script>
 
 <template>
@@ -44,6 +49,7 @@ const formatter = useDateFormatter('en')
     v-slot="{ date, grid, weekDays }"
     v-model:placeholder="placeholder"
     v-bind="forwarded"
+    :is-date-unavailable="isDateUnavailable"
     :class="cn('rounded-md border p-3', props.class)"
   >
     <CalendarHeader>

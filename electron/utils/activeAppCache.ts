@@ -1,4 +1,5 @@
 import { executeMethodsInOrder } from '../handle/handleFocusWin'
+import logger from '../logger'
 
 interface CacheItem<T> {
   value: T

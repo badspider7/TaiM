@@ -48,7 +48,7 @@ function getCurrentFTime() {
   return `${year}-${month}-${day} ${hour}:${minute}:${second}`
 }
 
-const SLEEP_TIME = 60 * 5 // 5 分钟
+const SLEEP_TIME = 60 * 5// 5 分钟
 
 class TimeTracker {
   private currentSession?: Session

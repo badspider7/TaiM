@@ -70,7 +70,9 @@ const TimeDelta = computed(() => {
   if (lastTotalTime.value <= 0) {
     return 100
   }
-  let delta = 1 - Number((totalTime.value / lastTotalTime.value).toFixed(2))
+  const todayHour = Number((totalTime.value / 3600).toFixed(2))
+  const lastHour = Number((lastTotalTime.value / 3600).toFixed(2))
+  let delta = 1 - Number((todayHour / lastHour).toFixed(2))
   delta = delta >= 1 ? delta : -delta
   return Number((delta * 100).toFixed(2))
 })
