@@ -9,6 +9,7 @@ export function setupTray(win: BrowserWindow): void {
     {
       label: '   显示   ',
       click: () => {
+        win?.minimize()
         win?.show()
       },
     },

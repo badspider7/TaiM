@@ -48,6 +48,7 @@ onMounted(() => {
 // 修改全局的滚动条样式
 body,
 body * {
+  user-select: none;
   &::-webkit-scrollbar-track-piece {
     background-color: #fff;
     -webkit-border-radius: 0;

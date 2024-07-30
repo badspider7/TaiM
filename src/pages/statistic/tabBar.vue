@@ -1,18 +1,30 @@
 <script setup lang='ts'>
 import { ref } from 'vue'
-import Calendar from './components/Calendar.vue'
+import DayCalendar from './components/DayCalendar.vue'
+import WeekCalendar from './components/WeekCalendar.vue'
+import MonthCalendar from './components/MonthCalendar.vue'
+import YearCalendar from './components/YearCalendar.vue'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Button } from '@/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+
+enum TabType {
+  day = 'day',
+  week = 'week',
+  month = 'month',
+  year = 'year',
+}
 
 const activeTab = ref('day')
+const acitveCom = ref(DayCalendar)
+const comMap = {
+  day: DayCalendar,
+  week: WeekCalendar,
+  month: MonthCalendar,
+  year: YearCalendar,
+}
 
-function tabChange(type: string) {
+function tabChange(type: keyof typeof TabType) {
   activeTab.value = type
+  acitveCom.value = comMap[type]
 }
 </script>
 
@@ -35,15 +47,7 @@ function tabChange(type: string) {
       </TabsList>
       <div class="date-container mt-2">
         <div class="date-btn">
-          <Popover>
-            <PopoverTrigger>
-              <Button>今天</Button>
-              <span class="week-range ml-3 text-sm">2024年7月21号 到 2024年7月30号</span>
-            </PopoverTrigger>
-            <PopoverContent>
-              <Calendar />
-            </PopoverContent>
-          </Popover>
+          <component :is="acitveCom" />
         </div>
       </div>
     </Tabs>
@@ -51,5 +55,9 @@ function tabChange(type: string) {
 </template>
 
 <style lang="scss" scoped>
-
+  .date-container{
+    .date-btn{
+      width: 340px;
+    }
+  }
 </style>
