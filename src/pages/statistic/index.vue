@@ -1,6 +1,5 @@
 <script setup lang='ts'>
-import { ref } from 'vue'
-import TabBar from './tabBar.vue'
+import TabBar from './TabBar.vue'
 </script>
 
 <template>
