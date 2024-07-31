@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ref } from 'vue'
+import { markRaw, ref } from 'vue'
 import DayCalendar from './components/DayCalendar.vue'
 import WeekCalendar from './components/WeekCalendar.vue'
 import MonthCalendar from './components/MonthCalendar.vue'
@@ -14,7 +14,7 @@ enum TabType {
 }
 
 const activeTab = ref('day')
-const acitveCom = ref(DayCalendar)
+const acitveCom = markRaw(DayCalendar)
 const comMap = {
   day: DayCalendar,
   week: WeekCalendar,

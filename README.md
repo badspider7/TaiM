@@ -5,7 +5,7 @@
 
 `windows` 的时间统计软件，记录和统计你每天使用软件的时间，帮助你更好的管理时间。
 
-![screenshot](./screenshot/shortcut.png)
+![screenshot](./screenshot/index.png)
 
 ## 功能
 

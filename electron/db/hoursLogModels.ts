@@ -5,6 +5,7 @@ import type { DBConfig } from './index'
 
 export interface HoursLogModelDB extends DBConfig {
   getData: (time: string, appModelID: number) => HoursLogModels
+  getDailyByDate: (date: string) => HoursLogModels[]
   insertData: (data: HoursLogModels) => void
   updateData: (totalTime: number, id: number) => void
   deleteDataByHour: (time: string, appModelID: number) => void
@@ -32,7 +33,10 @@ function useDB(db: Database.Database): HoursLogModelDB {
       const select = db.prepare(`select * from HoursLogModels where hoursTime = ? and appModelId = ?`).get(time, appModelID)
       return select
     },
-
+    getDailyByDate(date) {
+      const select = db.prepare(`select * from HoursLogModels where strftime('%Y-%m-%d', hoursTime) = ?`).all(date)
+      return select
+    },
     insertData(dataQuery) {
       const insertStmt = db.prepare(`insert into HoursLogModels (hoursTime, time,appModelId) values (?, ?, ?)`)
       insertStmt.run(dataQuery.hoursTime, dataQuery.time, dataQuery.appModelId)
