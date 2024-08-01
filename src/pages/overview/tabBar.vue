@@ -115,7 +115,7 @@ function tabChange(activeTab: string) {
           <ArrowTrendingLines20Regular class="w-5 h-5" />
         </template>
         <template #appIcon>
-          <img v-show="longestApp?.iconFile" :src="longestApp.iconFile" class="w-5 h-5">
+          <img v-show="longestApp?.iconFile" :src="longestApp?.iconFile" class="w-5 h-5">
         </template>
       </Card>
     </div>

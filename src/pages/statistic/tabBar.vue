@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { markRaw, ref } from 'vue'
+import { ref, shallowRef } from 'vue'
 import DayCalendar from './components/DayCalendar.vue'
 import WeekCalendar from './components/WeekCalendar.vue'
 import MonthCalendar from './components/MonthCalendar.vue'
@@ -14,7 +14,7 @@ enum TabType {
 }
 
 const activeTab = ref('day')
-const acitveCom = markRaw(DayCalendar)
+const acitveCom = shallowRef(DayCalendar)
 const comMap = {
   day: DayCalendar,
   week: WeekCalendar,
@@ -53,11 +53,3 @@ function tabChange(type: keyof typeof TabType) {
     </Tabs>
   </div>
 </template>
-
-<style lang="scss" scoped>
-  .date-container{
-    .date-btn{
-      width: 340px;
-    }
-  }
-</style>
