@@ -65,7 +65,8 @@ const isPositive = computed(() => {
 
 <style lang="scss" scoped>
     .card{
-        width: 12.5rem;
+        // width: 12.5rem;
+        flex: 1;
         height: 4.375rem;
         background-color: #fff;
         border-radius: .5rem;

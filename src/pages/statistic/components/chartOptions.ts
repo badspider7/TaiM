@@ -1,6 +1,6 @@
 import { Time } from '@/utils/timerEvent'
 
-export function getOptions(yAxis: number[], secondArr: number[]) {
+export function getDayOptions(yAxis: number[], secondArr: number[]) {
   const option = {
     tooltip: {
       trigger: 'axis',

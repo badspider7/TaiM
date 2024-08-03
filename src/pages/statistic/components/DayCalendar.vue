@@ -12,7 +12,7 @@ import type { AppData, HoursLogModels } from '@@/type/types'
 
 import { Calendar as CalendarIcon } from 'lucide-vue-next'
 import * as echarts from 'echarts'
-import { getOptions } from './chartOptions'
+import { getDayOptions } from './chartOptions'
 import { Calendar } from '@/components/ui/calendar'
 import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
@@ -42,7 +42,6 @@ const isOpen = ref(false)
 function selectedDateChange(date: DateValue | undefined) {
   if (date) {
     const time = `${date.year}-${date.month.toString().padStart(2, '0')}-${date.day.toString().padStart(2, '0')}`
-    console.log('time', time)
     getDataByTime(time)
     isOpen.value = false
   }
@@ -95,7 +94,7 @@ function initChart(yAxis: number[], secondArr: number[]) {
   if (!chart.value) {
     chart.value = echarts.init(document.querySelector('.chart-element') as HTMLElement)
   }
-  chart.value && chart.value.setOption(getOptions(yAxis, secondArr), { notMerge: true })
+  chart.value && chart.value.setOption(getDayOptions(yAxis, secondArr), { notMerge: true })
   chart.value.resize()
 }
 </script>
