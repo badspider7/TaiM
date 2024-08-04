@@ -1,3 +1,10 @@
+function formatDate(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day} 00:00:00`
+}
+
 export class Time {
   static toHoursString(seconds) {
     const hours = seconds / 3600
@@ -29,47 +36,39 @@ export class Time {
   }
 
   static getThisWeekDate() {
-    const today = new Date()
-    const dayOfWeek = today.getDay()
+    const now = new Date()
+    const day = now.getDay()
 
-    const startOfWeek = new Date(today)
-    startOfWeek.setDate(today.getDate() - dayOfWeek + 1)
+    const start = new Date(
+      now.getTime() - (day === 0 ? 6 : day - 1) * 24 * 60 * 60 * 1000,
+    )
 
-    const endOfWeek = new Date(startOfWeek)
-    endOfWeek.setDate(endOfWeek.getDate() + 6)
-
-    function formatDate(date) {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day} 00:00:00`
-    }
+    const end = new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000)
     return {
-      start: formatDate(startOfWeek),
-      end: formatDate(endOfWeek),
+      start: formatDate(start),
+      end: formatDate(end),
     }
   }
 
   static getLastWeekDate() {
-    const today = new Date()
-    const dayOfWeek = today.getDay()
+    const now = new Date()
+    const day = now.getDay()
 
-    const startOfLastWeek = new Date(today)
-    startOfLastWeek.setDate(today.getDate() - dayOfWeek - 6)
+    const thisWeekStart = new Date(
+      now.getTime() - (day === 0 ? 6 : day - 1) * 24 * 60 * 60 * 1000,
+    )
 
-    const endOfLastWeek = new Date(startOfLastWeek)
-    endOfLastWeek.setDate(endOfLastWeek.getDate() + 6)
+    const lastWeekStart = new Date(
+      thisWeekStart.getTime() - 7 * 24 * 60 * 60 * 1000,
+    )
 
-    function formatDate(date: Date) {
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day} 00:00:00`
-    }
+    const lastWeekEnd = new Date(
+      lastWeekStart.getTime() + 6 * 24 * 60 * 60 * 1000,
+    )
 
     return {
-      start: formatDate(startOfLastWeek),
-      end: formatDate(endOfLastWeek),
+      start: formatDate(lastWeekStart),
+      end: formatDate(lastWeekEnd),
     }
   }
 
@@ -100,9 +99,7 @@ export class Time {
     const today = new Date()
     const oneDay = 24 * 60 * 60 * 1000
     const yesterday = new Date(today.getTime() - oneDay)
-    const formattedYesterday = `${yesterday.getFullYear()}-${
-                             (`0${yesterday.getMonth() + 1}`).slice(-2)}-${
-                             (`0${yesterday.getDate()}`).slice(-2)} 00:00:00`
+    const formattedYesterday = `${yesterday.getFullYear()}-${(`0${yesterday.getMonth() + 1}`).slice(-2)}-${(`0${yesterday.getDate()}`).slice(-2)} 00:00:00`
 
     return formattedYesterday
   }

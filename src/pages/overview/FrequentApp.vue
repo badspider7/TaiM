@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import type { AppData } from '@@/type/types'
 import { Progress } from '@/components/ui/progress'
 import { Time } from '@/utils/timerEvent'
+import NoData from '@/components/NoData.vue'
 
 const props = defineProps({
   appData: {
@@ -38,7 +39,7 @@ function viewDetail() {
     <div class="title text-gray-400 text-base">
       最为频繁
     </div>
-    <div class="app-list">
+    <div v-if="frequentlyApp.length > 0" class="app-list">
       <div v-for="item in frequentlyApp" :key="item.id" class="app-info" @click="viewDetail">
         <div class="app-icon">
           <img :src="item.iconFile" alt="" class="w-5 h-5">
@@ -54,6 +55,7 @@ function viewDetail() {
         </div>
       </div>
     </div>
+    <NoData v-else />
   </div>
 </template>
 

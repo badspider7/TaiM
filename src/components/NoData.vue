@@ -9,5 +9,10 @@ import { ref } from 'vue'
 </template>
 
 <style lang="scss" scoped>
-
+.no-data{
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 </style>

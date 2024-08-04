@@ -67,7 +67,3 @@ const TimeDelta = computed(() => {
     </Card>
   </div>
 </template>
-
-<style lang="scss" scoped>
-
-</style>
