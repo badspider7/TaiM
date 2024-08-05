@@ -9,6 +9,7 @@ export function useAppDetail(TimeList: Array<DailyLogModels | HoursLogModels>, a
     map[app.id!] = app
     return map
   }, {})
+
   const appDataList: Array<AppData> = []
   TimeList.forEach((item) => {
     let appModel = appInfoMap[item.appModelId]

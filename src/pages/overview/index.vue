@@ -48,7 +48,7 @@ function tabChange(activeTab: string) {
     </div>
     <div class="choose-time mt-5">
       <TapBar :app-data="appData" @tab-change="tabChange" />
-      <AppList :app-data="appData" />
+      <AppList :app-data="appData" style="height:calc(100% - 145px)" />
     </div>
   </div>
 </template>

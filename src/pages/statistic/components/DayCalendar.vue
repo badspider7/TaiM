@@ -20,6 +20,9 @@ import { cn } from '@/lib/utils'
 import getUsageTimeApi from '@/api/getUsageTime'
 import { useAppInfo } from '@/store/app'
 import { useAppDetail } from '@/hooks/useAppDetail'
+import CardGroup from '@/components/CardGroup.vue'
+import { formatDate } from '@/utils/timerEvent'
+import AppList from '@/pages/overview/FrequentApp.vue'
 
 defineOptions({
   name: 'DayCalendar',
@@ -56,11 +59,30 @@ const isDateUnavailable: CalendarRootProps['isDateUnavailable'] = (date) => {
 const appStore = useAppInfo()
 const appData: Ref<AppData[]> = ref([])
 const appInfo = appStore.appInfoList
+const currentAppInfo: Ref<AppData[]> = ref([])
+const lastAppInfo: Ref<AppData[]> = ref([])
 
 async function getDataByTime(time: string) {
   const dailyData = await getUsageTimeApi.getPerHourTimeOneDay(time)
+  currentAppInfo.value = await getSelectAppData(time)
+  lastAppInfo.value = await getLastAppData(time)
   appData.value = useAppDetail(dailyData, appInfo)
   calcChartData(dailyData)
+}
+
+async function getSelectAppData(time: string) {
+  const selectDate = `${time} 00:00:00`
+  const selectedList = await getUsageTimeApi.getDailyTime(selectDate)
+  return useAppDetail(selectedList, appInfo)
+}
+
+async function getLastAppData(time: string) {
+  const currentTime = new Date(`${time} 00:00:00`)
+  const lastTime = new Date(currentTime)
+  lastTime.setDate(currentTime.getDate() - 1)
+  const lastDate = formatDate(lastTime)
+  const lastDataList = await getUsageTimeApi.getDailyTime(lastDate)
+  return lastDataList
 }
 
 function calcChartData(data: HoursLogModels[]) {
@@ -120,13 +142,22 @@ function initChart(yAxis: number[], secondArr: number[]) {
       />
     </PopoverContent>
   </Popover>
-  <div class="chart-element" />
+  <CardGroup :current-app-info="currentAppInfo" :last-app-info="lastAppInfo" />
+  <div class="app-detail mt-5">
+    <div class="chart-element" />
+    <AppList :app-data="currentAppInfo" />
+  </div>
 </template>
 
 <style lang="scss" scoped>
+.app-detail{
+  flex: 1;
+  overflow: hidden auto;
+}
+
 .chart-element{
   width: 100%;
-  height: 300px;
+  height: 250px;
   border-left: 1px solid #e0e0e0;
   border-bottom: 1px solid #e0e0e0;
   margin-top: 10px;

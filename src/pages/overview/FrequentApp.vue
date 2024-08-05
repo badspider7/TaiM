@@ -63,7 +63,7 @@ function viewDetail() {
 .frequent-app-list-wrap{
     display: flex;
     flex-direction: column;
-    height: calc(100% - 145px);
+    // height: calc(100% - 145px);
     margin-top: 16px;
 }
 

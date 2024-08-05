@@ -29,27 +29,39 @@ function tabChange(type: keyof typeof TabType) {
 </script>
 
 <template>
-  <div>
-    <Tabs default-value="day">
-      <TabsList>
-        <TabsTrigger value="day" @click="tabChange('day')">
-          按天
-        </TabsTrigger>
-        <TabsTrigger value="week" @click="tabChange('week')">
-          按周
-        </TabsTrigger>
-        <TabsTrigger value="month" @click="tabChange('month')">
-          按月
-        </TabsTrigger>
-        <TabsTrigger value="year" @click="tabChange('year')">
-          按年
-        </TabsTrigger>
-      </TabsList>
-      <div class="date-container mt-2">
-        <div class="date-btn">
-          <component :is="acitveCom" />
-        </div>
+  <Tabs default-value="day" class="list-wrap">
+    <TabsList>
+      <TabsTrigger value="day" @click="tabChange('day')">
+        按天
+      </TabsTrigger>
+      <TabsTrigger value="week" @click="tabChange('week')">
+        按周
+      </TabsTrigger>
+      <TabsTrigger value="month" @click="tabChange('month')">
+        按月
+      </TabsTrigger>
+      <TabsTrigger value="year" @click="tabChange('year')">
+        按年
+      </TabsTrigger>
+    </TabsList>
+    <div class="date-container mt-2">
+      <div class="date-btn">
+        <component :is="acitveCom" />
       </div>
-    </Tabs>
-  </div>
+    </div>
+  </Tabs>
 </template>
+
+<style lang="scss" scoped>
+.list-wrap{
+  height: 100%
+}
+.date-container{
+  height: calc(100% - 50px);
+}
+.date-btn{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+</style>

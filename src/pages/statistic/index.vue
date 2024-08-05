@@ -14,5 +14,7 @@ import TabBar from './TabBar.vue'
 </template>
 
 <style lang="scss" scoped>
-
+.app-body{
+  height: calc(100% - 50px);
+}
 </style>
