@@ -18,6 +18,13 @@ export function getHoursUsageData() {
   })
 }
 
+export function getOneHourUsageData() {
+  ipcMain.handle('usageData:OneHour', (event, date: string) => {
+    const dailyUsageData = hoursLogDb.getHourData(date)
+    return dailyUsageData
+  })
+}
+
 export function getWeekUsageData() {
   ipcMain.handle('usageData:week', (event, timeStart, timeEnd) => {
     const todayUsageData = dailyLogDb.getDataByTimeRange(timeStart, timeEnd)

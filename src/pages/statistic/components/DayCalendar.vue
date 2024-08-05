@@ -23,6 +23,7 @@ import { useAppDetail } from '@/hooks/useAppDetail'
 import CardGroup from '@/components/CardGroup.vue'
 import { formatDate } from '@/utils/timerEvent'
 import AppList from '@/pages/overview/FrequentApp.vue'
+import AppDetail from '@/components/AppDetail.vue'
 
 defineOptions({
   name: 'DayCalendar',
@@ -112,6 +113,8 @@ function calcChartData(data: HoursLogModels[]) {
 }
 
 const chart = shallowRef<echarts.ECharts>()
+const isShowAppDetailPage = ref(false)
+const activeIndex = ref<null | number>(null)
 
 function initChart(yAxis: number[], secondArr: number[]) {
   if (!chart.value) {
@@ -122,32 +125,70 @@ function initChart(yAxis: number[], secondArr: number[]) {
   chart.value.resize()
 
   // listen bar click event
-  chart.value.getZr().on('click', (params) => {
-    if (!params || !chart.value)
-      return
-    const pointInPixel = [params.offsetX, params.offsetY]
-    if (chart.value!.containPixel('grid', pointInPixel)) {
-      const xIndex = chart.value!.convertFromPixel({ seriesIndex: 0 }, [params.offsetX, params.offsetY])[0]
-      chart.value.setOption({
-        graphic: {
-          type: 'rect',
-          id: 2,
-          $action: 'merge',
-          shape: {
-            x: params.topTarget.shape.x,
-            y: params.topTarget.shape.y,
-            width: params.topTarget.shape.width,
-            height: params.topTarget.shape.height,
-          },
-          style: {
-            fill: '#FDECF0',
-          },
-          z: 10,
-        },
-      })
-      chart.value.resize()
-    }
+  chart.value.getZr().on('click', params => chartClickCallback(params, chart.value))
+}
+
+const RECT_ID = 2
+const RECT_FILL_COLOR = '#FDECF0'
+const appDetailInfo = ref<AppData[]>([])
+
+function updateChartGraphic(chart: any, x: number, y: number, width: number, height: number, show: boolean) {
+  chart.setOption({
+    graphic: {
+      type: 'rect',
+      id: RECT_ID,
+      $action: 'merge',
+      shape: {
+        x,
+        y,
+        width,
+        height: show ? height : 0, // 根据是否显示来调整高度
+      },
+      style: {
+        fill: RECT_FILL_COLOR,
+      },
+      z: 10,
+    },
   })
+}
+
+function chartClickCallback(params: any, chart: any): void {
+  if (!params || !chart)
+    return
+
+  const pointInPixel = [params.offsetX, params.offsetY]
+  if (chart.containPixel('grid', pointInPixel)) {
+    const xIndex = chart.convertFromPixel({ seriesIndex: 0 }, pointInPixel)[0]
+
+    if (xIndex === activeIndex.value) {
+      isShowAppDetailPage.value = false
+      updateChartGraphic(chart, 0, 0, 0, 0, false) // 隐藏矩形
+      appDetailInfo.value = []
+      activeIndex.value = null
+    }
+    else {
+      isShowAppDetailPage.value = true
+      getDataByHour(xIndex).then((res) => {
+        appDetailInfo.value = res
+      })
+      // 假设 params.topTarget 是有效的，并且包含我们需要的 shape 属性
+      if (params.topTarget && params.topTarget.shape) {
+        updateChartGraphic(chart, params.topTarget.shape.x, params.topTarget.shape.y, params.topTarget.shape.width, params.topTarget.shape.height, true)
+      }
+    }
+
+    activeIndex.value = xIndex
+
+    // 注意：除非确实需要，否则不要在这里调用 resize()
+    // chart.resize();
+  }
+}
+
+async function getDataByHour(hour: number) {
+  const hourDate = Math.abs(hour) === 0 ? '00' : hour
+  const hoursTime = `${selectedDate.value!.year}-${selectedDate.value!.month.toString().padStart(2, '0')}-${selectedDate.value!.day.toString().padStart(2, '0')} ${hourDate.toString().padStart(2, '0')}:00:00`
+  const dailyData = await getUsageTimeApi.getHourData(hoursTime)
+  return useAppDetail(dailyData, appInfo)
 }
 
 function refreshChart() {
@@ -181,7 +222,8 @@ function refreshChart() {
   <CardGroup :current-app-info="currentAppInfo" :last-app-info="lastAppInfo" />
   <div class="app-detail mt-5">
     <div class="chart-element" />
-    <AppList :app-data="currentAppInfo" />
+    <AppDetail v-if="isShowAppDetailPage" :app-data="appDetailInfo" />
+    <AppList v-else :app-data="currentAppInfo" />
   </div>
 </template>
 

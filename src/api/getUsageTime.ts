@@ -10,4 +10,8 @@ export default {
   getWeekTime: (startTime: string, endTime: string) => {
     return window.ipcRenderer.invoke('usageData:week', startTime, endTime)
   },
+
+  getHourData: (time: string) => {
+    return window.ipcRenderer.invoke('usageData:OneHour', time)
+  },
 }
