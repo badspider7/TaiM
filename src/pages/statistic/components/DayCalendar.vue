@@ -115,22 +115,27 @@ function calcChartData(data: HoursLogModels[]) {
 const chart = shallowRef<echarts.ECharts>()
 const isShowAppDetailPage = ref(false)
 const activeIndex = ref<null | number>(null)
+const appDetailInfo = ref<AppData[]>([])
 
 function initChart(yAxis: number[], secondArr: number[]) {
   if (!chart.value) {
     chart.value = echarts.init(document.querySelector('.chart-element') as HTMLElement)
   }
 
+  // TODO: 到时候优化一下
   chart.value && chart.value.setOption(getDayOptions(yAxis, secondArr))
   chart.value.resize()
-
+  isShowAppDetailPage.value = false
+  appDetailInfo.value = []
+  activeIndex.value = null
+  updateChartGraphic(chart.value, 0, 0, 0, 0, false) // 隐藏矩形
+  chart.value.getZr().off('click')
   // listen bar click event
   chart.value.getZr().on('click', params => chartClickCallback(params, chart.value))
 }
 
 const RECT_ID = 2
 const RECT_FILL_COLOR = '#FDECF0'
-const appDetailInfo = ref<AppData[]>([])
 
 function updateChartGraphic(chart: any, x: number, y: number, width: number, height: number, show: boolean) {
   chart.setOption({
@@ -159,7 +164,6 @@ function chartClickCallback(params: any, chart: any): void {
   const pointInPixel = [params.offsetX, params.offsetY]
   if (chart.containPixel('grid', pointInPixel)) {
     const xIndex = chart.convertFromPixel({ seriesIndex: 0 }, pointInPixel)[0]
-
     if (xIndex === activeIndex.value) {
       isShowAppDetailPage.value = false
       updateChartGraphic(chart, 0, 0, 0, 0, false) // 隐藏矩形
