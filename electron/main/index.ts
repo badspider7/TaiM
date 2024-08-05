@@ -83,7 +83,10 @@ export async function createWindow() {
   })
 
   win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', new Date().toLocaleString())
+    win.on('resized', () => {
+      win?.webContents.send('refresh-chart', '')
+    })
+
     // 开始统计应用时间
     startRecord()
   })

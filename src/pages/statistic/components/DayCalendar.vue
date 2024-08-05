@@ -37,6 +37,7 @@ const selectedDate = ref<DateValue>()
 onMounted(() => {
   selectedDate.value = today(getLocalTimeZone())
   selectedDateChange(selectedDate.value)
+  refreshChart()
 })
 
 // control popover state
@@ -118,6 +119,12 @@ function initChart(yAxis: number[], secondArr: number[]) {
   }
   chart.value && chart.value.setOption(getDayOptions(yAxis, secondArr), { notMerge: true })
   chart.value.resize()
+}
+
+function refreshChart() {
+  window.ipcRenderer.on('refresh-chart', (_event, value) => {
+    chart.value && chart.value.resize()
+  })
 }
 </script>
 
