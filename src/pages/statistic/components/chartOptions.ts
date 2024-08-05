@@ -1,3 +1,4 @@
+import { graphic } from 'echarts'
 import { Time } from '@/utils/timerEvent'
 
 export function getDayOptions(yAxis: number[], secondArr: number[]) {
@@ -7,8 +8,9 @@ export function getDayOptions(yAxis: number[], secondArr: number[]) {
       axisPointer: {
         type: 'shadow',
         shadowStyle: {
-          color: 'rgba(253, 245, 247,0.6)',
-
+          // #FDECF0
+          color: '#FEF6F8',
+          opacity: 0.6,
         },
       },
       formatter(params: any) {
@@ -71,7 +73,6 @@ export function getDayOptions(yAxis: number[], secondArr: number[]) {
     ],
     series: [
       {
-        name: 'Direct',
         type: 'bar',
         barWidth: '60%',
         data: yAxis,
@@ -124,10 +125,19 @@ export function getDayOptions(yAxis: number[], secondArr: number[]) {
           ],
         },
         itemStyle: {
-          color: 'rgb(243,242,223)',
+          color: '#F8F7F3',
         },
       },
     ],
+    // graphic: {
+    //   // id: 2,
+    //   // type: 'rect',
+    //   // $action: 'merge',
+    //   // style: {
+    //   //   fill: '#FDECF0',
+    //   // },
+    //   // z: 10,
+    // },
   }
 
   return option

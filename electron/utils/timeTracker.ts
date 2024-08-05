@@ -36,8 +36,8 @@ interface usageRecord {
   duration: number
 }
 
+//  yyyy-mm-dd hh:mm:ss
 function getCurrentFTime() {
-  //  yyyy-mm-dd hh:mm:ss
   const now = new Date()
   const year = now.getFullYear()
   const month = (now.getMonth() + 1).toString().padStart(2, '0')
@@ -57,6 +57,7 @@ class TimeTracker {
   private checkTimeId: NodeJS.Timeout | null = null
 
   start() {
+    this.currentSession = null// 清空当前session
     if (this.timerId)
       return
     this.timerId = setInterval(this.checkActiveWindow.bind(this), 1000)
@@ -71,8 +72,11 @@ class TimeTracker {
     if (this.timerId) {
       clearInterval(this.timerId)
       this.timerId = null
-      this.endCurrentSession()
     }
+    else {
+      logger.info('error==== timerId is null')
+    }
+    this.endCurrentSession()
   }
 
   sleep() {
@@ -87,6 +91,7 @@ class TimeTracker {
     this.isSleeping = false
     cache.startSaveInterval()
     this.start()
+    logger.info('唤醒的currentSession数据', this.currentSession)
   }
 
   checkIsActive() {
@@ -137,7 +142,6 @@ class TimeTracker {
   private endCurrentSession() {
     if (!this.currentSession)
       return
-
     const { name, startTime, startFTime, file, iconFile, actionDes } = this.currentSession
     // 如果是切换到桌面的话就不记录（桌面也是windows 资源管理器 中的一部分）
     // TODO：要适配多语言或者多平台的话 ，这个会出问题

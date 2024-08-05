@@ -117,8 +117,37 @@ function initChart(yAxis: number[], secondArr: number[]) {
   if (!chart.value) {
     chart.value = echarts.init(document.querySelector('.chart-element') as HTMLElement)
   }
-  chart.value && chart.value.setOption(getDayOptions(yAxis, secondArr), { notMerge: true })
+
+  chart.value && chart.value.setOption(getDayOptions(yAxis, secondArr))
   chart.value.resize()
+
+  // listen bar click event
+  chart.value.getZr().on('click', (params) => {
+    if (!params || !chart.value)
+      return
+    const pointInPixel = [params.offsetX, params.offsetY]
+    if (chart.value!.containPixel('grid', pointInPixel)) {
+      const xIndex = chart.value!.convertFromPixel({ seriesIndex: 0 }, [params.offsetX, params.offsetY])[0]
+      chart.value.setOption({
+        graphic: {
+          type: 'rect',
+          id: 2,
+          $action: 'merge',
+          shape: {
+            x: params.topTarget.shape.x,
+            y: params.topTarget.shape.y,
+            width: params.topTarget.shape.width,
+            height: params.topTarget.shape.height,
+          },
+          style: {
+            fill: '#FDECF0',
+          },
+          z: 10,
+        },
+      })
+      chart.value.resize()
+    }
+  })
 }
 
 function refreshChart() {
