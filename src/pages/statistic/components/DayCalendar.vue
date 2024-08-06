@@ -136,6 +136,7 @@ function initChart(yAxis: number[], secondArr: number[]) {
 
 const RECT_ID = 2
 const RECT_FILL_COLOR = '#FDECF0'
+const selectedHours = ref('')
 
 function updateChartGraphic(chart: any, x: number, y: number, width: number, height: number, show: boolean) {
   chart.setOption({
@@ -186,8 +187,8 @@ function chartClickCallback(params: any, chart: any): void {
 
 async function getDataByHour(hour: number) {
   const hourDate = Math.abs(hour) === 0 ? '00' : hour
-  const hoursTime = `${selectedDate.value!.year}-${selectedDate.value!.month.toString().padStart(2, '0')}-${selectedDate.value!.day.toString().padStart(2, '0')} ${hourDate.toString().padStart(2, '0')}:00:00`
-  const dailyData = await getUsageTimeApi.getHourData(hoursTime)
+  selectedHours.value = `${selectedDate.value!.year}-${selectedDate.value!.month.toString().padStart(2, '0')}-${selectedDate.value!.day.toString().padStart(2, '0')} ${hourDate.toString().padStart(2, '0')}:00:00`
+  const dailyData = await getUsageTimeApi.getHourData(selectedHours.value)
   return useAppDetail(dailyData, appInfo)
 }
 
@@ -222,7 +223,7 @@ function refreshChart() {
   <CardGroup :current-app-info="currentAppInfo" :last-app-info="lastAppInfo" />
   <div class="app-detail mt-5">
     <div class="chart-element" />
-    <AppDetail v-if="isShowAppDetailPage" :app-data="appDetailInfo" />
+    <AppDetail v-if="isShowAppDetailPage" :app-data="appDetailInfo" :date="selectedHours" />
     <AppList v-else :app-data="currentAppInfo" />
   </div>
 </template>

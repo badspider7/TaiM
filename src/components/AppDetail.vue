@@ -1,8 +1,10 @@
 <script setup lang='ts'>
 import { computed } from 'vue'
 import type { AppData } from '@@/type/types'
+import { Calendar as CalendarIcon } from 'lucide-vue-next'
 import { Progress } from '@/components/ui/progress'
 import { Time } from '@/utils/timerEvent'
+import { Button } from '@/components/ui/button'
 import NoData from '@/components/NoData.vue'
 
 const props = defineProps({
@@ -11,11 +13,17 @@ const props = defineProps({
     default: () => [],
     required: true,
   },
+  date: {
+    type: String,
+    default: '',
+    required: true,
+  },
 })
-// 最为频繁的，默认是前五个
+
 const frequentlyApp = computed(() => {
   const tempAppInfo = props.appData
-  return tempAppInfo.sort((a, b) => b.totalTime - a.totalTime).slice(0, 5)
+  console.log(tempAppInfo)
+  return tempAppInfo.sort((a, b) => b.totalTime - a.totalTime)
 })
 
 function formatTime(second: number) {
@@ -36,8 +44,18 @@ function viewDetail() {
 
 <template>
   <div class="app-list-wrap">
-    <div class="title text-gray-400 text-base">
-      总计
+    <div class="time-box">
+      <Button
+        variant="secondary"
+      >
+        <CalendarIcon class="mr-2 h-4 w-4" />
+        {{ date.replace(/(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2}):(\d{2})/, '$1年$2月$3日 $4点') }}
+      </Button>
+    </div>
+    <div class="title text-gray-400 text-base mt-4">
+      <span>
+        总计{{ frequentlyApp.length }}个应用，使用时间{{ formatTime(frequentlyApp.reduce((a, b) => a + b.totalTime, 0)) }}
+      </span>
     </div>
     <div v-if="frequentlyApp.length > 0" class="app-list">
       <div v-for="item in frequentlyApp" :key="item.id" class="app-info" @click="viewDetail">
@@ -63,8 +81,7 @@ function viewDetail() {
 .app-list-wrap{
     display: flex;
     flex-direction: column;
-    // height: calc(100% - 145px);
-    margin-top: 16px;
+    margin-top: 1rem;
 }
 
 .app-list{
@@ -74,22 +91,22 @@ function viewDetail() {
 .app-info{
     display: flex;
     align-items:center;
-    margin: 20px 0;
+    margin: 1.25rem 0;
     .app-icon{
-        width: 50px;
-        height: 50px;
+        width: 3.125rem;
+        height: 3.125rem;
         display: flex;
         justify-content: center;
         align-items: center;
         background-color: #f0f0f0;
-        margin-right: 16px;
-        border-radius: 4px;
-        border: 2px solid transparent;
+        margin-right: 1rem;
+        border-radius: .25rem;
+        border: .125rem solid transparent;
     }
     .show-data{
         flex:1;
         .progress{
-            height: 12px;
+            height: .75rem;
             // background-color: transparent;
         }
        :deep(.bg-primary){
@@ -97,18 +114,18 @@ function viewDetail() {
         }
     }
     .usage-time{
-        width: 125px;
-        font-size: 14px;
+        width: 7.8125rem;
+        font-size: .875rem;
         align-self: end;
-        margin-left: 10px;
+        margin-left: .625rem;
     }
 }
 
 .app-info:hover{
     cursor: pointer;
   .app-icon{
-    // box-shadow: 3px 2px 3px 0px #cccc;
-    border: 2px solid rgb(248, 20, 61);
+    // box-shadow: .1875rem .125rem .1875rem 0rem #cccc;
+    border: .125rem solid rgb(248, 20, 61);
     transition: all 1s ease-out;
   }
   .app-name{
