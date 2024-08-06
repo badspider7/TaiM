@@ -19,7 +19,6 @@ const mostTimeUsageApp = ref<AppData>({} as AppData)
 // 上次的累计使用时间
 const lastTotalTime = ref(0)
 const lastAppCount = ref(0)
-const AppCountDelta = ref(0)
 
 watch(() => props.currentAppInfo, (newVal) => {
   currentTotalTime.value = newVal.reduce((acc: number, cur: AppData) => acc + cur.totalTime, 0)
@@ -30,7 +29,10 @@ watch(() => props.currentAppInfo, (newVal) => {
 watch(() => props.lastAppInfo, (newVal) => {
   lastTotalTime.value = newVal.reduce((acc: number, cur: DailyLogModels) => acc + cur.time, 0)
   lastAppCount.value = newVal.length
-  AppCountDelta.value = currentAppCount.value - lastAppCount.value
+})
+
+const AppCountDelta = computed(() => {
+  return currentAppCount.value - lastAppCount.value
 })
 
 const TimeDelta = computed(() => {

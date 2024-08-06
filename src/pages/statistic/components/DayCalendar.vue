@@ -179,12 +179,8 @@ function chartClickCallback(params: any, chart: any): void {
       if (params.topTarget && params.topTarget.shape) {
         updateChartGraphic(chart, params.topTarget.shape.x, params.topTarget.shape.y, params.topTarget.shape.width, params.topTarget.shape.height, true)
       }
+      activeIndex.value = xIndex
     }
-
-    activeIndex.value = xIndex
-
-    // 注意：除非确实需要，否则不要在这里调用 resize()
-    // chart.resize();
   }
 }
 
