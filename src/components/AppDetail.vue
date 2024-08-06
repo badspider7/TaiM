@@ -22,7 +22,6 @@ const props = defineProps({
 
 const frequentlyApp = computed(() => {
   const tempAppInfo = props.appData
-  console.log(tempAppInfo)
   return tempAppInfo.sort((a, b) => b.totalTime - a.totalTime)
 })
 

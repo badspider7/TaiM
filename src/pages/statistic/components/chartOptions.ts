@@ -1,7 +1,7 @@
 import { graphic } from 'echarts'
 import { Time } from '@/utils/timerEvent'
 
-export function getDayOptions(yAxis: number[], secondArr: number[]) {
+export function getDayOptions(xAxis: number[], yAxis: number[], secondArr: number[]) {
   const option = {
     tooltip: {
       trigger: 'axis',
@@ -129,15 +129,6 @@ export function getDayOptions(yAxis: number[], secondArr: number[]) {
         },
       },
     ],
-    // graphic: {
-    //   // id: 2,
-    //   // type: 'rect',
-    //   // $action: 'merge',
-    //   // style: {
-    //   //   fill: '#FDECF0',
-    //   // },
-    //   // z: 10,
-    // },
   }
 
   return option
