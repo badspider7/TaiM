@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { onMounted, ref, watch } from 'vue'
-import type { AppData } from '@@/type/types'
+import type { AppData, DailyLogModels } from '@@/type/types'
 import { getWeekOptions } from './chartOptions'
 import {
   Select,
@@ -20,7 +20,7 @@ defineOptions({
 
 const weektype = ref('week')
 const currentWeekInfo = ref<AppData[]>([])
-const lastWeekInfo = ref<AppData[]>([])
+const lastWeekInfo = ref<DailyLogModels[]>([])
 const xAxis = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 const chartTableRef = ref<InstanceType<typeof ChartTable> | null>(null)
 
@@ -47,19 +47,19 @@ async function updateChartData(weekType: string) {
 // 拿到本周使用的数据
 async function getThisWeekData() {
   const { start, end } = Time.getThisWeekDate()
-  return await getUsageTimeApi.getWeekTime(start, end)
+  return await getUsageTimeApi.getDataInRange(start, end)
 }
 
 // 拿到上周使用的数据
 async function getLastWeekData() {
   const { start, end } = Time.getLastWeekDate()
-  return await getUsageTimeApi.getWeekTime(start, end)
+  return await getUsageTimeApi.getDataInRange(start, end)
 }
 
 // 拿到上上周数据
 async function getBeforeLastWeekData() {
   const { start, end } = Time.getBoforeLastWeekDate()
-  return await getUsageTimeApi.getWeekTime(start, end)
+  return await getUsageTimeApi.getDataInRange(start, end)
 }
 
 function calcChartData(data: AppData[]) {

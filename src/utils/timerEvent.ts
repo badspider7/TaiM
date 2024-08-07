@@ -94,16 +94,15 @@ export class Time {
     }
   }
 
-  static getMonthDate(date) {
-    const year = date.getFullYear()
-    const month = date.getMonth() + 1 // Months are 0-based
-    const dateStart = new Date(year, month - 1, 1)
-    dateStart.setHours(0, 0, 0, 0)
+  static getMonthDate(month: number) {
+    const year = new Date().getFullYear()
+    const firstDay = new Date(year, month - 1, 1)
+    const lastDay = new Date(year, month, 0)
 
-    const dateEnd = new Date(year, month, 0) // Last day of the month
-    dateEnd.setHours(23, 59, 59, 999)
-
-    return [dateStart, dateEnd]
+    return {
+      start: formatDate(firstDay),
+      end: formatDate(lastDay),
+    }
   }
 
   static getYearDate(date) {

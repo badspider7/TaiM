@@ -13,7 +13,7 @@ export function formatDateTime(dateTimeString: string) {
 }
 
 export async function handleTimeRangeData(start: string, end: string) {
-  const weekTimeList = await getUsageTimeApi.getWeekTime(start, end)
+  const weekTimeList = await getUsageTimeApi.getDataInRange(start, end)
   const appModelTimeSums: Record<number, DailyLogModels > = {}
   weekTimeList.forEach((item: DailyLogModels) => {
     if (!appModelTimeSums[item.appModelId]) {

@@ -25,8 +25,8 @@ export function getOneHourUsageData() {
   })
 }
 
-export function getWeekUsageData() {
-  ipcMain.handle('usageData:week', (event, timeStart, timeEnd) => {
+export function getDataInRange() {
+  ipcMain.handle('usageData:range', (event, timeStart, timeEnd) => {
     const todayUsageData = dailyLogDb.getDataByTimeRange(timeStart, timeEnd)
     return todayUsageData
   })

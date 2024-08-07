@@ -8,7 +8,7 @@ import {
   today,
 } from '@internationalized/date'
 import type { CalendarRootProps } from 'radix-vue'
-import type { AppData, HoursLogModels } from '@@/type/types'
+import type { AppData, DailyLogModels, HoursLogModels } from '@@/type/types'
 
 import { Calendar as CalendarIcon } from 'lucide-vue-next'
 import { Calendar } from '@/components/ui/calendar'
@@ -56,7 +56,7 @@ const isDateUnavailable: CalendarRootProps['isDateUnavailable'] = (date) => {
 
 const appData: Ref<AppData[]> = ref([])
 const currentAppInfo: Ref<AppData[]> = ref([])
-const lastAppInfo: Ref<AppData[]> = ref([])
+const lastAppInfo: Ref<DailyLogModels[]> = ref([])
 const xAxis = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
 
 async function getDataByTime(time: string) {

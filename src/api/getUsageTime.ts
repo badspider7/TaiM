@@ -10,9 +10,9 @@ export default {
     return window.ipcRenderer.invoke('usageData:hour', time)
   },
 
-  // 拿到规定时间段的每日使用时间
-  getWeekTime: (startTime: string, endTime: string) => {
-    return window.ipcRenderer.invoke('usageData:week', startTime, endTime)
+  // 拿到指定时间段的时间
+  getDataInRange: (startTime: string, endTime: string) => {
+    return window.ipcRenderer.invoke('usageData:range', startTime, endTime)
   },
 
   // select * from HoursLogModels where hoursTime = ?

@@ -27,7 +27,7 @@ onMounted(() => {
 
 function getYearRange() {
   const startYear = currentYear.year - 3
-  const endYear = currentYear.year + 3
+  const endYear = currentYear.year
   const yearRange = []
   for (let i = startYear; i <= endYear; i++) {
     yearRange.push(i.toString())

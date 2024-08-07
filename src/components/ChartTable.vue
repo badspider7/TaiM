@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import type { AppData } from '@@/type/types'
+import type { AppData, DailyLogModels } from '@@/type/types'
 import * as echarts from 'echarts'
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import CardGroup from '@/components/CardGroup.vue'
@@ -14,7 +14,7 @@ import { Time, formatDate } from '@/utils/timerEvent'
 
 const props = defineProps<{
   currentAppInfo: AppData[]
-  lastAppInfo: AppData[]
+  lastAppInfo: DailyLogModels[]
   selectedDate: any
 }>()
 
@@ -49,6 +49,7 @@ const RECT_ID = 2
 const RECT_FILL_COLOR = '#FDECF0'
 const selectedHours = ref('')
 const selectedDay = ref('')
+const selectedMonth = ref('')
 
 function updateChartGraphic(chart: any, x: number, y: number, width: number, height: number, show: boolean) {
   chart.setOption({
@@ -130,7 +131,12 @@ async function getAppDetail(index: number) {
       return getDataByDay(formatDate(currentDate))
     },
     [ACTIVE_TAB_TYPE.MONTH]: () => {
-      return getDataByHour(index)
+      console.log('props', props.selectedDate, index)
+      const currentYear = new Date().getFullYear()
+      const month = props.selectedDate
+      const day = index + 1
+      const date = `${currentYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} 00:00:00`
+      return getDataByDay(date)
     },
     [ACTIVE_TAB_TYPE.YEAR]: () => {
       return getDataByHour(index)
@@ -152,7 +158,7 @@ const displayTime = computed(() => {
       return selectedDay.value
     },
     [ACTIVE_TAB_TYPE.MONTH]: () => {
-      return selectedHours.value
+      return selectedDay.value
     },
     [ACTIVE_TAB_TYPE.YEAR]: () => {
       return selectedHours.value

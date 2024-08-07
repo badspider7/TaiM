@@ -45,9 +45,13 @@ const AppCountDelta = computed(() => {
 })
 
 const TimeDelta = computed(() => {
-  if (lastTotalTime.value <= 0) {
+  if (lastTotalTime.value <= 0 && currentTotalTime.value > 0) {
     return 100
   }
+  if (currentTotalTime.value <= 0) {
+    return 0
+  }
+
   const todayHour = Number((currentTotalTime.value / 3600).toFixed(2))
   const lastHour = Number((lastTotalTime.value / 3600).toFixed(2))
 
