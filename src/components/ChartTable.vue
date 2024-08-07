@@ -113,6 +113,13 @@ async function getDataByDay(day: string) {
   return useAppDetail(dailyData)
 }
 
+async function getDateByMonth(year: string, month: number) {
+  selectedMonth.value = `${year}年${month.toString().padStart(2, '0')}月`
+  const { start, end } = Time.getMonthDate(+year, +month)
+  const monthData = await getUsageTimeApi.getDataInRange(start, end)
+  return useAppDetail(monthData)
+}
+
 async function getAppDetail(index: number) {
   const strategies = {
     [ACTIVE_TAB_TYPE.DAY]: () => {
@@ -131,18 +138,26 @@ async function getAppDetail(index: number) {
       return getDataByDay(formatDate(currentDate))
     },
     [ACTIVE_TAB_TYPE.MONTH]: () => {
-      console.log('props', props.selectedDate, index)
       const currentYear = new Date().getFullYear()
       const month = props.selectedDate
       const day = index + 1
       const date = `${currentYear}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} 00:00:00`
       return getDataByDay(date)
     },
-    [ACTIVE_TAB_TYPE.YEAR]: () => {
-      return getDataByHour(index)
+    [ACTIVE_TAB_TYPE.YEAR]: async () => {
+      const monthData = await getDateByMonth(props.selectedDate, index + 1)
+      const tempAppInfo = monthData.reduce((acc: Record<number, AppData>, item: AppData) => {
+        if (acc[item.id!]) {
+          acc[item.id!].totalTime += item.totalTime
+        }
+        else {
+          acc[item.id!] = { ...item }
+        }
+        return acc
+      }, {})
+      return Object.values(tempAppInfo)
     },
   }
-
   const strategy = strategies[store.activeTab]
   if (strategy) {
     return strategy()
@@ -161,7 +176,7 @@ const displayTime = computed(() => {
       return selectedDay.value
     },
     [ACTIVE_TAB_TYPE.YEAR]: () => {
-      return selectedHours.value
+      return selectedMonth.value
     },
   }
 

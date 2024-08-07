@@ -94,8 +94,7 @@ export class Time {
     }
   }
 
-  static getMonthDate(month: number) {
-    const year = new Date().getFullYear()
+  static getMonthDate(year: number, month: number) {
     const firstDay = new Date(year, month - 1, 1)
     const lastDay = new Date(year, month, 0)
 

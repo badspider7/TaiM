@@ -49,7 +49,7 @@ async function updateChartData(month: string) {
 
 // 获取指定月份数据
 async function getCurrentMonthData(month: string) {
-  const { start, end } = Time.getMonthDate(+month)
+  const { start, end } = Time.getMonthDate(new Date().getFullYear(), +month)
   const monthData = await getUsageTimeApi.getDataInRange(start, end)
   const lastDay = getMonthDays(month)
   const xAxis = Array.from({ length: lastDay }, (_, index) => index + 1)
@@ -62,7 +62,7 @@ async function getLastMonthData(month: string) {
     return []
   }
   else {
-    const { start, end } = Time.getMonthDate(Number(month) - 1)
+    const { start, end } = Time.getMonthDate(new Date().getFullYear(), Number(month) - 1)
     return await getUsageTimeApi.getDataInRange(start, end)
   }
 }

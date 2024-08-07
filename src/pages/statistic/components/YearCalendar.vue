@@ -5,6 +5,7 @@ import {
   today,
 } from '@internationalized/date'
 import type { AppData, DailyLogModels } from '@@/type/types'
+import { getYearOptions } from './chartOptions'
 import {
   Select,
   SelectContent,
@@ -70,7 +71,30 @@ async function getLastYearData(year: string) {
 }
 
 function calcChartData(data: DailyLogModels[]) {
-  console.log('data', data)
+  const summary: Record<string, Record<number, number>> = {}
+  xAxis.forEach((day) => {
+    summary[day.toString().padStart(2, '0')] = {}
+  })
+  data.forEach((item) => {
+    const month = item.dayTime.substring(5, 7)
+    const appModelId = item.appModelId
+    const time = item.time
+
+    if (!summary[month][appModelId]) {
+      summary[month][appModelId] = 0
+    }
+    summary[month][appModelId] += time
+  })
+
+  const monthArray: string[] = []
+  const secondTotals: number[] = []
+
+  for (const month in summary) {
+    secondTotals[Number(month) - 1] = Object.values(summary[month]).reduce((acc, curr) => acc + curr, 0)
+    monthArray[Number(month) - 1] = (secondTotals[Number(month) - 1] / 3600).toFixed(2)
+  }
+  const xAxisData = xAxis.map(item => `${item}月`)
+  chartTableRef.value && chartTableRef.value.initChart(getYearOptions(xAxisData, monthArray, secondTotals))
 }
 </script>
 
