@@ -5,6 +5,7 @@ import WeekCalendar from './components/WeekCalendar.vue'
 import MonthCalendar from './components/MonthCalendar.vue'
 import YearCalendar from './components/YearCalendar.vue'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useActiveTab } from '@/store/app'
 
 enum TabType {
   day = 'day',
@@ -15,6 +16,7 @@ enum TabType {
 
 const activeTab = ref('day')
 const acitveCom = shallowRef(DayCalendar)
+const store = useActiveTab()
 const comMap = {
   day: DayCalendar,
   week: WeekCalendar,
@@ -24,6 +26,7 @@ const comMap = {
 
 function tabChange(type: keyof typeof TabType) {
   activeTab.value = type
+  store.setActiveTab(type)
   acitveCom.value = comMap[type]
 }
 </script>

@@ -5,14 +5,11 @@ import type { Ref } from 'vue'
 import TapBar from './tabBar.vue'
 import AppList from './FrequentApp.vue'
 import getUsageTimeApi from '@/api/getUsageTime'
-import { useAppInfo } from '@/store/app'
 import { formatDateTime, handleTimeRangeData } from '@/utils'
 import { Time } from '@/utils/timerEvent'
 import { useAppDetail } from '@/hooks/useAppDetail'
 
-const appStore = useAppInfo()
 const appData: Ref<AppData[]> = ref([])
-const appInfo = appStore.appInfoList
 
 onMounted(() => {
   getTodayAppData()
@@ -21,13 +18,13 @@ onMounted(() => {
 async function getTodayAppData() {
   const todayDate = formatDateTime(new Date().toLocaleString())
   const todayTimeList = await getUsageTimeApi.getDailyTime(todayDate)
-  appData.value = useAppDetail(todayTimeList, appInfo)
+  appData.value = useAppDetail(todayTimeList)
 }
 
 async function getWeekAppData() {
   const { start, end } = Time.getThisWeekDate()
   const weekData: DailyLogModels[] = await handleTimeRangeData(start, end)
-  appData.value = useAppDetail(weekData, appInfo)
+  appData.value = useAppDetail(weekData)
   console.log(' appData.value', appData.value)
 }
 

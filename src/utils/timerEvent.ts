@@ -72,6 +72,28 @@ export class Time {
     }
   }
 
+  static getBoforeLastWeekDate() {
+    const now = new Date()
+    const day = now.getDay()
+
+    const thisWeekStart = new Date(
+      now.getTime() - (day === 0 ? 6 : day - 1) * 24 * 60 * 60 * 1000,
+    )
+
+    const lastTwoWeeksStart = new Date(
+      thisWeekStart.getTime() - 2 * 7 * 24 * 60 * 60 * 1000,
+    )
+
+    const lastTwoWeeksEnd = new Date(
+      lastTwoWeeksStart.getTime() + 6 * 24 * 60 * 60 * 1000,
+    )
+
+    return {
+      start: formatDate(lastTwoWeeksStart),
+      end: formatDate(lastTwoWeeksEnd),
+    }
+  }
+
   static getMonthDate(date) {
     const year = date.getFullYear()
     const month = date.getMonth() + 1 // Months are 0-based

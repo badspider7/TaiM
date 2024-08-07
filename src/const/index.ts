@@ -33,3 +33,10 @@ export const DEFAULT_DISPLAY_SIDEBAR: sidebarItem[] = [
     path: '/category',
   },
 ]
+
+export const ACTIVE_TAB_TYPE = {
+  DAY: 'day',
+  WEEK: 'week',
+  MONTH: 'month',
+  YEAR: 'year',
+}

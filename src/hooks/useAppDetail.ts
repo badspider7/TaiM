@@ -2,8 +2,8 @@ import type { AppData, AppModel, DailyLogModels, HoursLogModels } from '@@/type/
 import { useAppInfo } from '@/store/app'
 
 const appStore = useAppInfo()
-
-export function useAppDetail(TimeList: Array<DailyLogModels | HoursLogModels>, appInfo: AppModel[]) {
+const appInfo: AppModel[] = appStore.appInfoList
+export function useAppDetail(TimeList: Array<DailyLogModels | HoursLogModels>) {
   // 创建一个映射，以快速查找应用信息
   const appInfoMap = appInfo.reduce((map: Record<string | number, AppModel>, app) => {
     map[app.id!] = app

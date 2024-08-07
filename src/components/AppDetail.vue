@@ -48,7 +48,7 @@ function viewDetail() {
         variant="secondary"
       >
         <CalendarIcon class="mr-2 h-4 w-4" />
-        {{ date.replace(/(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2}):(\d{2})/, '$1年$2月$3日 $4点') }}
+        {{ date }}
       </Button>
     </div>
     <div class="title text-gray-400 text-base mt-4">

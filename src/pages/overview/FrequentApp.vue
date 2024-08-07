@@ -15,7 +15,18 @@ const props = defineProps({
 // 最为频繁的，默认是前五个
 const frequentlyApp = computed(() => {
   const tempAppInfo = props.appData
-  return tempAppInfo.sort((a, b) => b.totalTime - a.totalTime).slice(0, 5)
+  const mergeItems = tempAppInfo.reduce((acc, item) => {
+    if (acc[item.id!]) {
+      acc[item.id!].totalTime += item.totalTime
+    }
+    else {
+      acc[item.id!] = { ...item }
+    }
+    return acc
+  }, {} as Record<number, AppData>)
+
+  const appInfoArray: AppData[] = Object.values(mergeItems)
+  return appInfoArray.sort((a, b) => b.totalTime - a.totalTime).slice(0, 5)
 })
 
 function formatTime(second: number) {

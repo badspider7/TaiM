@@ -14,3 +14,13 @@ export const useAppInfo = defineStore('appInfo', () => {
   }
   return { appInfoList, getAppInfo }
 })
+
+export const useActiveTab = defineStore('activeTab', () => {
+  const activeTab = ref('day')
+
+  function setActiveTab(tab: string) {
+    activeTab.value = tab
+  }
+
+  return { activeTab, setActiveTab }
+})

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Ref } from 'vue'
-import { nextTick, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import {
   DateFormatter,
   type DateValue,
@@ -16,10 +16,10 @@ import { Button } from '@/components/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import getUsageTimeApi from '@/api/getUsageTime'
-import { useAppInfo } from '@/store/app'
 import { useAppDetail } from '@/hooks/useAppDetail'
 import { formatDate } from '@/utils/timerEvent'
 import ChartTable from '@/components/ChartTable.vue'
+import { getDayOptions } from '@/pages/statistic/components/chartOptions'
 
 defineOptions({
   name: 'DayCalendar',
@@ -54,9 +54,7 @@ const isDateUnavailable: CalendarRootProps['isDateUnavailable'] = (date) => {
   return date.year > now.getFullYear() || (date.year === now.getFullYear() && date.month > now.getMonth() + 1) || (date.year === now.getFullYear() && date.month === now.getMonth() + 1 && date.day > now.getDate())
 }
 
-const appStore = useAppInfo()
 const appData: Ref<AppData[]> = ref([])
-const appInfo = appStore.appInfoList
 const currentAppInfo: Ref<AppData[]> = ref([])
 const lastAppInfo: Ref<AppData[]> = ref([])
 const xAxis = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
@@ -65,14 +63,14 @@ async function getDataByTime(time: string) {
   const dailyData = await getUsageTimeApi.getPerHourTimeOneDay(time)
   currentAppInfo.value = await getSelectAppData(time)
   lastAppInfo.value = await getLastAppData(time)
-  appData.value = useAppDetail(dailyData, appInfo)
+  appData.value = useAppDetail(dailyData)
   calcChartData(dailyData)
 }
 
 async function getSelectAppData(time: string) {
   const selectDate = `${time} 00:00:00`
   const selectedList = await getUsageTimeApi.getDailyTime(selectDate)
-  return useAppDetail(selectedList, appInfo)
+  return useAppDetail(selectedList)
 }
 
 async function getLastAppData(time: string) {
@@ -100,14 +98,15 @@ async function calcChartData(data: HoursLogModels[]) {
     summary[hour][appModelId] += time
   })
 
-  const hourlyTotals: number[] = []
+  const minuteTotals: number[] = []
   const secondTotals: number[] = []
 
   for (const hour in summary) {
     secondTotals[Number(hour)] = Object.values(summary[hour]).reduce((acc, curr) => acc + curr, 0)
-    hourlyTotals[Number(hour)] = Math.floor(secondTotals[Number(hour)] / 60)
+    minuteTotals[Number(hour)] = Math.floor(secondTotals[Number(hour)] / 60)
   }
-  chartTableRef.value && chartTableRef.value.initChart(xAxis, hourlyTotals, secondTotals)
+
+  chartTableRef.value && chartTableRef.value.initChart(getDayOptions(xAxis, minuteTotals, secondTotals))
 }
 </script>
 

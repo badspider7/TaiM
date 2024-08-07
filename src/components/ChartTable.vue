@@ -1,14 +1,16 @@
 <script setup lang='ts'>
 import type { AppData } from '@@/type/types'
 import * as echarts from 'echarts'
-import { onMounted, ref, shallowRef } from 'vue'
+import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import CardGroup from '@/components/CardGroup.vue'
 import AppList from '@/pages/overview/FrequentApp.vue'
 import AppDetail from '@/components/AppDetail.vue'
 import { useAppDetail } from '@/hooks/useAppDetail'
-import { useAppInfo } from '@/store/app'
-import { getDayOptions } from '@/pages/statistic/components/chartOptions'
+
 import getUsageTimeApi from '@/api/getUsageTime'
+import { useActiveTab } from '@/store/app'
+import { ACTIVE_TAB_TYPE } from '@/const'
+import { Time, formatDate } from '@/utils/timerEvent'
 
 const props = defineProps<{
   currentAppInfo: AppData[]
@@ -16,37 +18,37 @@ const props = defineProps<{
   selectedDate: any
 }>()
 
+const store = useActiveTab()
+
 onMounted(() => {
   refreshChart()
 })
 
-const appStore = useAppInfo()
-const appInfo = appStore.appInfoList
 const chart = shallowRef<echarts.ECharts>()
 const activeIndex = ref<null | number>(null)
 const appDetailInfo = ref<AppData[]>([])
 const isShowAppDetailPage = ref(false)
 
-function initChart(xAxis: number[], yAxis: number[], secondArr: number[]) {
+function initChart(options: echarts.EChartsCoreOption) {
   if (!chart.value) {
     chart.value = echarts.init(document.querySelector('.chart-element') as HTMLElement)
   }
 
   // TODO: 到时候优化一下
-  chart.value && chart.value.setOption(getDayOptions(xAxis, yAxis, secondArr))
+  chart.value && chart.value.setOption(options)
   chart.value.resize()
   isShowAppDetailPage.value = false
   appDetailInfo.value = []
   activeIndex.value = null
   updateChartGraphic(chart.value, 0, 0, 0, 0, false) // 隐藏矩形
   chart.value.getZr().off('click')
-  // listen bar click event
   chart.value.getZr().on('click', params => chartClickCallback(params, chart.value))
 }
 
 const RECT_ID = 2
 const RECT_FILL_COLOR = '#FDECF0'
 const selectedHours = ref('')
+const selectedDay = ref('')
 
 function updateChartGraphic(chart: any, x: number, y: number, width: number, height: number, show: boolean) {
   chart.setOption({
@@ -83,8 +85,10 @@ function chartClickCallback(params: any, chart: any): void {
     }
     else {
       isShowAppDetailPage.value = true
-      getDataByHour(xIndex).then((res) => {
-        appDetailInfo.value = res
+      getAppDetail(xIndex).then((res) => {
+        if (res) {
+          appDetailInfo.value = res
+        }
       })
       // 假设 params.topTarget 是有效的，并且包含我们需要的 shape 属性
       if (params.topTarget && params.topTarget.shape) {
@@ -99,8 +103,65 @@ async function getDataByHour(hour: number) {
   const hourDate = Math.abs(hour) === 0 ? '00' : hour
   selectedHours.value = `${props.selectedDate.year}-${props.selectedDate.month.toString().padStart(2, '0')}-${props.selectedDate.day.toString().padStart(2, '0')} ${hourDate.toString().padStart(2, '0')}:00:00`
   const dailyData = await getUsageTimeApi.getHourData(selectedHours.value)
-  return useAppDetail(dailyData, appInfo)
+  return useAppDetail(dailyData)
 }
+
+async function getDataByDay(day: string) {
+  const dailyData = await getUsageTimeApi.getDailyTime(day)
+  selectedDay.value = day.split(' ')[0]
+  return useAppDetail(dailyData)
+}
+
+async function getAppDetail(index: number) {
+  const strategies = {
+    [ACTIVE_TAB_TYPE.DAY]: () => {
+      return getDataByHour(index)
+    },
+    [ACTIVE_TAB_TYPE.WEEK]: () => {
+      let weekStart = null
+      if (props.selectedDate === 'week') {
+        weekStart = Time.getThisWeekDate().start
+      }
+      else {
+        weekStart = Time.getLastWeekDate().start
+      }
+      const currentTime = new Date(weekStart).getTime()
+      const currentDate = new Date(currentTime + index * 24 * 60 * 60 * 1000)
+      return getDataByDay(formatDate(currentDate))
+    },
+    [ACTIVE_TAB_TYPE.MONTH]: () => {
+      return getDataByHour(index)
+    },
+    [ACTIVE_TAB_TYPE.YEAR]: () => {
+      return getDataByHour(index)
+    },
+  }
+
+  const strategy = strategies[store.activeTab]
+  if (strategy) {
+    return strategy()
+  }
+}
+
+const displayTime = computed(() => {
+  const strategies = {
+    [ACTIVE_TAB_TYPE.DAY]: () => {
+      return selectedHours.value.replace(/(\d{4})-(\d{2})-(\d{2})\s(\d{2}):(\d{2}):(\d{2})/, '$1年$2月$3日 $4点')
+    },
+    [ACTIVE_TAB_TYPE.WEEK]: () => {
+      return selectedDay.value
+    },
+    [ACTIVE_TAB_TYPE.MONTH]: () => {
+      return selectedHours.value
+    },
+    [ACTIVE_TAB_TYPE.YEAR]: () => {
+      return selectedHours.value
+    },
+  }
+
+  const strategy = strategies[store.activeTab]
+  return strategy()
+})
 
 function refreshChart() {
   window.ipcRenderer.on('refresh-chart', (_event, value) => {
@@ -117,7 +178,7 @@ defineExpose({
   <CardGroup :current-app-info="currentAppInfo" :last-app-info="lastAppInfo" />
   <div class="app-detail mt-5">
     <div class="chart-element" />
-    <AppDetail v-if="isShowAppDetailPage" :app-data="appDetailInfo" :date="selectedHours" />
+    <AppDetail v-if="isShowAppDetailPage" :app-data="appDetailInfo" :date="displayTime" />
     <AppList v-else :app-data="currentAppInfo" />
   </div>
 </template>
