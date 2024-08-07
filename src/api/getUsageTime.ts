@@ -19,4 +19,8 @@ export default {
   getHourData: (time: string) => {
     return window.ipcRenderer.invoke('usageData:OneHour', time)
   },
+
+  getAllYearData: (year: string) => {
+    return window.ipcRenderer.invoke('usageData:year', year)
+  },
 }

@@ -5,6 +5,7 @@ import type { DBConfig } from './index'
 
 export interface DailyLogDb extends DBConfig {
   getAllData: () => DailyLogModels[]
+  getAllYearData: (year: string) => DailyLogModels[]
   getSingleData: (time: string, appModelId: number) => DailyLogModels | undefined
   getDataFromHoursDB: (date: string, appModelId: number) => void
   getDataByTime: (time: string) => DailyLogModels[]
@@ -32,6 +33,10 @@ function useDB(db: Database.Database): DailyLogDb {
     },
     getAllData() {
       const select = db.prepare(`select * from DailyLogModels`).all()
+      return select
+    },
+    getAllYearData(year) {
+      const select = db.prepare(`select * from DailyLogModels where strftime('%Y', dayTime) = ?`).all(year)
       return select
     },
     getSingleData(time, appModelID) {

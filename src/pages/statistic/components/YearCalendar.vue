@@ -4,6 +4,7 @@ import {
   getLocalTimeZone,
   today,
 } from '@internationalized/date'
+import type { AppData, DailyLogModels } from '@@/type/types'
 import {
   Select,
   SelectContent,
@@ -11,6 +12,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import ChartTable from '@/components/ChartTable.vue'
+import getUsageTimeApi from '@/api/getUsageTime'
+import { useAppDetail } from '@/hooks/useAppDetail'
 
 defineOptions({
   name: 'YearCalendar',
@@ -21,8 +25,10 @@ const activeYear = ref()
 const yearList = ref()
 
 onMounted(() => {
+  // 获取当前年份
   getYearRange()
   activeYear.value = currentYear.year.toString()
+  updateChartData(activeYear.value)
 })
 
 function getYearRange() {
@@ -35,8 +41,36 @@ function getYearRange() {
   yearList.value = yearRange
 }
 
-function valueChange(v: string) {
-  console.log('vaavaa', v)
+function valueChange(year: string) {
+  updateChartData(year)
+}
+
+const currentYearInfo = ref<AppData[]>([])
+const lastYearInfo = ref<DailyLogModels[]>([])
+const chartTableRef = ref<InstanceType<typeof ChartTable> | null>(null)
+
+async function updateChartData(year: string) {
+  currentYearInfo.value = await getCurrentYearData(year)
+  lastYearInfo.value = await getLastYearData(year)
+}
+
+const xAxis = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+// 获取指定年份的数据
+async function getCurrentYearData(year: string) {
+  const yearListData = await getUsageTimeApi.getAllYearData(year)
+  calcChartData(yearListData)
+  return useAppDetail(yearListData)
+}
+
+// 获取指定年份去年的数据
+async function getLastYearData(year: string) {
+  const lastYear = (+year - 1).toString()
+  return await getUsageTimeApi.getAllYearData(lastYear)
+}
+
+function calcChartData(data: DailyLogModels[]) {
+  console.log('data', data)
 }
 </script>
 
@@ -57,6 +91,7 @@ function valueChange(v: string) {
       </SelectContent>
     </Select>
   </div>
+  <ChartTable ref="chartTableRef" :current-app-info="currentYearInfo" :last-app-info="lastYearInfo" :selected-date="activeYear" />
 </template>
 
 <style lang="scss" scoped>

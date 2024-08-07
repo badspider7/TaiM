@@ -1,7 +1,7 @@
 import type { BrowserWindow } from 'electron'
 import { isMaximized, setupTitleBarHandler } from './handleTitleBar'
 import { setupTray } from './handleTray'
-import { getAppInfo, getDataInRange, getHoursUsageData, getOneHourUsageData, getTodayUsageData } from './handleUsageData'
+import { getAllYearData, getAppInfo, getDataInRange, getHoursUsageData, getOneHourUsageData, getTodayUsageData } from './handleUsageData'
 import '../../src/utils/timerEvent'
 
 export function setupHandle(win: BrowserWindow) {
@@ -12,5 +12,6 @@ export function setupHandle(win: BrowserWindow) {
   getDataInRange()
   getHoursUsageData()
   getOneHourUsageData()
+  getAllYearData()
   getAppInfo()
 }

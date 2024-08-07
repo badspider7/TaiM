@@ -32,6 +32,13 @@ export function getDataInRange() {
   })
 }
 
+export function getAllYearData() {
+  ipcMain.handle('usageData:year', (event, year) => {
+    const dailyUsageData = dailyLogDb.getAllYearData(year)
+    return dailyUsageData
+  })
+}
+
 export function getAppInfo() {
   ipcMain.handle('getAppInfo', async (event) => {
     return appModelDb.getAllAppModel()

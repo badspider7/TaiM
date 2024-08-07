@@ -22,7 +22,6 @@ const lastAppCount = ref(0)
 
 watch(() => props.currentAppInfo, (newVal) => {
   currentTotalTime.value = newVal.reduce((acc: number, cur: AppData) => acc + cur.totalTime, 0)
-  currentAppCount.value = newVal.length
   const tempAppInfo = newVal.reduce((acc: Record<number, AppData>, item: AppData) => {
     if (acc[item.id!]) {
       acc[item.id!].totalTime += item.totalTime
@@ -32,12 +31,22 @@ watch(() => props.currentAppInfo, (newVal) => {
     }
     return acc
   }, {})
+  currentAppCount.value = Object.values(tempAppInfo).length
   mostTimeUsageApp.value = (Object.values(tempAppInfo) as AppData[]).reduce((acc: AppData, cur: AppData) => cur.totalTime > acc.totalTime ? cur : acc, newVal[0])
 })
 
 watch(() => props.lastAppInfo, (newVal) => {
   lastTotalTime.value = newVal.reduce((acc: number, cur: DailyLogModels) => acc + cur.time, 0)
-  lastAppCount.value = newVal.length
+  const tempAppInfo = newVal.reduce((acc: Record<number, AppData>, item: AppData) => {
+    if (acc[item.id!]) {
+      acc[item.id!].totalTime += item.totalTime
+    }
+    else {
+      acc[item.id!] = { ...item }
+    }
+    return acc
+  }, {})
+  lastAppCount.value = Object.values(tempAppInfo).length
 })
 
 const AppCountDelta = computed(() => {
