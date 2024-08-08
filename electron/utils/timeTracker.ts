@@ -145,7 +145,7 @@ class TimeTracker {
     const { name, startTime, startFTime, file, iconFile, actionDes } = this.currentSession
     // 如果是切换到桌面的话就不记录（桌面也是windows 资源管理器 中的一部分）
     // TODO：要适配多语言或者多平台的话 ，这个会出问题
-    if (name === 'Windows 资源管理器' && !actionDes || ignoreNameList.includes(name)) {
+    if ((name === 'Windows 资源管理器' && !actionDes) || ignoreNameList.includes(name)) {
       logger.info('忽略记录', name)
     }
     else {

@@ -8,7 +8,6 @@ const fileIcon = require('extract-file-icon')
 const icondir = path.join(process.cwd(), 'AppIcons')
 
 export async function getWinIco(appInfo): Promise<string> {
-  // eslint-disable-next-line no-async-promise-executor
   return new Promise(async (resolve, reject) => {
     try {
       await mkdir(icondir, { recursive: true }).catch((err) => {

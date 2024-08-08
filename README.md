@@ -5,22 +5,24 @@
 
 `windows` 的时间统计软件，记录和统计你每天使用软件的时间，帮助你更好的管理时间。
 
-![screenshot](./screenshot/index.png)
+![screenshot](./screenshot/screenShot_1.png)
+![screenshot](./screenshot/screenShot_2.png)
+![screenshot](./screenshot/screenShot_3.png)
 
 ## 功能
 
 - [x]  统计软件使用时间
 - [x] 睡眠模式，五分钟与窗口不交互不进行统计
-- [ ] 导出/导入统计结果
-- [ ] 主题切换/随着系统自动切换
 - [ ] 开机自启动
-- [ ] 设置统计时间范围
-- [ ] 自定义分类
 - [ ] 自定义忽略软件
 - [ ] 监控网站使用时间
 - [ ] 优化内存开销（最主要的）
 - [ ] 多语言
 - [ ] 添加流畅动画
+- [ ] 主题切换/随着系统自动切换
+- [ ] 设置统计时间范围
+- [ ] 自定义分类
+- [ ] 导出/导入统计结果
 
 ## 安装
 

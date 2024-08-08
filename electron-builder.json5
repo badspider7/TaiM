@@ -26,7 +26,8 @@
         ]
       }
     ],
-    "artifactName": "${productName}-Windows-${version}-Setup.${ext}"
+    "artifactName": "${productName}-Windows-${version}-Setup.${ext}",
+    "icon": "public/logo.ico"
   },
   "nsis": {
     "oneClick": false,

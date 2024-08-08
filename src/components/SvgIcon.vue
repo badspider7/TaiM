@@ -74,8 +74,8 @@ watch(
 <style scoped>
 svg,
 path {
-	transition: fill 250ms;
-    width: 100%;
-    height: 100%;
+  transition: fill 250ms;
+  width: 100%;
+  height: 100%;
 }
 </style>

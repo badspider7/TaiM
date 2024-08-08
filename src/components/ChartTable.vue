@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import type { AppData, DailyLogModels } from '@@/type/types'
 import * as echarts from 'echarts'
-import { computed, onMounted, ref, shallowRef, watch } from 'vue'
+import { computed, onMounted, ref, shallowRef } from 'vue'
 import CardGroup from '@/components/CardGroup.vue'
 import AppList from '@/pages/overview/FrequentApp.vue'
 import AppDetail from '@/components/AppDetail.vue'

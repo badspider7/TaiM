@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron'
+import { ipcMain } from 'electron'
 import dailyLogDb from '../db/dailyLogModels'
 import hoursLogDb from '../db/hoursLogModels'
 import appModelDb from '../db/appModels'

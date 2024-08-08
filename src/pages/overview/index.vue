@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { onMounted, ref } from 'vue'
-import type { AppData, AppModel, DailyLogModels } from '@@/type/types'
+import type { AppData, DailyLogModels } from '@@/type/types'
 import type { Ref } from 'vue'
 import TapBar from './tabBar.vue'
 import AppList from './FrequentApp.vue'
