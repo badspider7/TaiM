@@ -22,7 +22,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build && electron-builder",
+    "release:win": "vue-tsc --noEmit && vite build && electron-builder --win",
     "preview": "vite preview",
     "rebuild": "electron rebuild.js",
     "postinstall": "electron-builder install-app-deps",
@@ -52,7 +52,7 @@
     "@vitejs/plugin-vue": "^5.0.4",
     "autoprefixer": "^10.4.19",
     "electron": "^29.4.3",
-    "electron-builder": "^24.13.3",
+    "electron-builder": "^25.0.3",
     "eslint": "^9.7.0",
     "pinia": "^2.1.7",
     "sass": "^1.77.8",
