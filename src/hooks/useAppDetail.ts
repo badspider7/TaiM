@@ -16,6 +16,7 @@ export function useAppDetail(TimeList: Array<DailyLogModels | HoursLogModels>) {
     if (!appModel) {
       // 如果当前appModelId不在appInfoMap中，则尝试从appStore中获取
       const updatedAppInfo: any = appStore.getAppInfo()
+      // TODO: 这里会出现bug
       // 更新appInfoMap
       const updatedAppInfoMap = updatedAppInfo.reduce((map: Record<number, AppModel>, app: AppModel) => {
         map[app.id as number] = app

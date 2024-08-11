@@ -3,6 +3,7 @@ import type { BrowserWindow } from 'electron'
 import { Menu, Tray, app, nativeImage } from 'electron'
 
 export function setupTray(win: BrowserWindow): void {
+  // TODO: bug 不显示
   const tray = new Tray(nativeImage.createFromPath(path.join(process.env.VITE_IMAGE_PATH, 'tray_icon.png')))
 
   const contextMenu = Menu.buildFromTemplate([

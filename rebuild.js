@@ -2,6 +2,7 @@ const path = require('node:path')
 const child = require('node:child_process')
 
 function execute(cmd, callback, cwd = process.cwd()) {
+  console.log('Rebuilding better-sqlite3 for Electron...')
   const items = cmd
   const exe = items.shift()
   const processor = child.spawn(exe, items, { cwd })

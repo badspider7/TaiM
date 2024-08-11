@@ -29,6 +29,7 @@ function createLogger() {
 }
 
 const logDirPath = isDev ? '.' : app.getPath('userData')
+console.log('app===', app.getPath('userData'))
 
 const dailyRotateFileTransport = new DailyRotateFile({
   level: isDev ? 'debug' : 'info',
