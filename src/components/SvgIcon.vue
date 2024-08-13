@@ -5,7 +5,7 @@ import { computed, getCurrentInstance, nextTick, ref, useAttrs, watch } from 'vu
 const props = withDefaults(defineProps<{ name: string }>(), {})
 
 const modules = import.meta.glob('@/assets/icons/svg/*.svg', {
-  as: 'component',
+  query: '?component',
   eager: true,
 })
 

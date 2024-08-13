@@ -2,12 +2,14 @@ import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
-import { BrowserWindow, app, shell } from 'electron'
+import { BrowserWindow, app, ipcMain, shell } from 'electron'
+import installExtension from 'electron-devtools-installer'
 import { setupHandle } from '../handle'
 import { clearAllTimer, startRecord } from '../utils'
 import logger from '../logger'
 import { initDb } from '../db'
 
+const VUEJS3_DEVTOOLS = 'nhdogjmejiglipccpnnnanhbledajbpd'
 const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -75,6 +77,12 @@ export async function createWindow() {
   }
   else {
     win.loadFile(indexHtml)
+    // 拦截快捷键Control+R
+    win.webContents.on('before-input-event', (event: Electron.Event, input: Electron.Input) => {
+      if (input.control && input.key.toLowerCase() === 'r') {
+        event.preventDefault()
+      }
+    })
   }
 
   win.once('ready-to-show', () => {
@@ -86,7 +94,6 @@ export async function createWindow() {
     win.on('resized', () => {
       win?.webContents.send('refresh-chart', '')
     })
-
     // 开始统计应用时间
     startRecord()
   })
@@ -107,8 +114,16 @@ app.on('window-all-closed', () => {
     app.quit()
 })
 
-app.whenReady().then(() => {
+ipcMain.on('open-url', (e, args) => {
+  void shell.openExternal(args)
+})
+app.whenReady().then(async () => {
   initDb()
   void createWindow()
   setupHandle(win)
+  if (process.env.VITE_DEV_SERVER_URL) {
+    installExtension(VUEJS3_DEVTOOLS, { loadExtensionOptions: { allowFileAccess: true } })
+      .then(name => logger.debug(`Added Extension:  ${name}`))
+      .catch(err => logger.debug('An error occurred: ', err))
+  }
 })

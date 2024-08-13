@@ -22,9 +22,9 @@ function getSqlite3(filename = path.join(app.getPath('userData'), 'better-sqlite
     // https://github.com/WiseLibs/better-sqlite3/blob/v8.5.2/lib/database.js#L36
     // https://github.com/WiseLibs/better-sqlite3/blob/v8.5.2/lib/database.js#L50
     nativeBinding: bind_path,
-    verbose: process.env.production
-      ? () => {}
-      : (message?: unknown, ...additionalArgs: unknown[]) => logger.debug('sql', message, additionalArgs),
+    // verbose: process.env.production
+    //   ? () => {}
+    //   : (message?: unknown, ...additionalArgs: unknown[]) => logger.debug('sql', message, additionalArgs),
   })
   db.pragma('journal_mode = WAL')
   logger.debug(TAG, bind_path, 'load')

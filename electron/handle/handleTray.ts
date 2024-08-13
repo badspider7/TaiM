@@ -5,8 +5,6 @@ import { Menu, Tray, app, nativeImage } from 'electron'
 export function setupTray(win: BrowserWindow): void {
   const tray = new Tray(nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.ico')))
 
-  console.log('tray', tray)
-
   const contextMenu = Menu.buildFromTemplate([
     {
       label: '   显示   ',
