@@ -20,18 +20,18 @@ export const DEFAULT_DISPLAY_SIDEBAR: sidebarItem[] = [
     icon: 'statics',
     path: '/statistics',
   },
-  {
-    title: '详细',
-    name: 'detail',
-    icon: 'detail',
-    path: '/detail',
-  },
-  {
-    title: '分类',
-    name: 'category',
-    icon: 'category',
-    path: '/category',
-  },
+  // {
+  //   title: '详细',
+  //   name: 'detail',
+  //   icon: 'detail',
+  //   path: '/detail',
+  // },
+  // {
+  //   title: '分类',
+  //   name: 'category',
+  //   icon: 'category',
+  //   path: '/category',
+  // },
 ]
 
 export const ACTIVE_TAB_TYPE = {

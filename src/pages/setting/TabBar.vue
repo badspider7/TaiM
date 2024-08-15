@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, shallowRef, watch } from 'vue'
 import Data from './components/Data.vue'
 import Common from './components/Common.vue'
 import Behavior from './components/Behavior.vue'
@@ -20,7 +20,7 @@ const comMap = {
   about: About,
 }
 const activeTab = ref('common')
-const acitveCom = ref(Common)
+const acitveCom = shallowRef(Common)
 
 function tabChange(value: keyof typeof TabType) {
   activeTab.value = value
