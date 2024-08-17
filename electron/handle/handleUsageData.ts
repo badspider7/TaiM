@@ -44,3 +44,12 @@ export function getAppInfo() {
     return appModelDb.getAllAppModel()
   })
 }
+
+export function handleUsageData() {
+  getTodayUsageData()
+  getHoursUsageData()
+  getOneHourUsageData()
+  getDataInRange()
+  getAllYearData()
+  getAppInfo()
+}

@@ -73,7 +73,7 @@ export async function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL)
     // Open devTool if the app is not packaged
-    win.webContents.openDevTools()
+    // win.webContents.openDevTools()
   }
   else {
     win.loadFile(indexHtml)
@@ -108,11 +108,15 @@ export async function createWindow() {
 }
 
 app.on('window-all-closed', () => {
+  console.log('====windows all close ===')
   clearAllTimer()
   win = null
   if (process.platform !== 'darwin')
     app.quit()
 })
+
+// 防止页面被冻结
+app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion')
 
 ipcMain.on('open-url', (e, args) => {
   void shell.openExternal(args)
@@ -121,9 +125,9 @@ app.whenReady().then(async () => {
   initDb()
   void createWindow()
   setupHandle(win)
-  if (process.env.VITE_DEV_SERVER_URL) {
-    installExtension(VUEJS3_DEVTOOLS, { loadExtensionOptions: { allowFileAccess: true } })
-      .then(name => logger.debug(`Added Extension:  ${name}`))
-      .catch(err => logger.debug('An error occurred: ', err))
-  }
+  // if (process.env.VITE_DEV_SERVER_URL) {
+  //   installExtension(VUEJS3_DEVTOOLS, { loadExtensionOptions: { allowFileAccess: true } })
+  //     .then(name => logger.debug(`Added Extension:  ${name}`))
+  //     .catch(err => logger.debug('An error occurred: ', err))
+  // }
 })

@@ -104,6 +104,7 @@ class TimeTracker {
     }
 
     // 超过5 分钟没有操作就进入休眠
+    // TODO: 优化：要考虑电脑休眠的情况
     if (!this.isSleeping && idleTime > SLEEP_TIME) {
       this.sleep()
     }

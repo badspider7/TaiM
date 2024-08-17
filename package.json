@@ -1,7 +1,7 @@
 {
   "name": "taim",
   "type": "module",
-  "version": "28.1.0",
+  "version": "0.0.1-alpha",
   "private": true,
   "description": "Taim!",
   "author": "badspider7",
@@ -23,7 +23,6 @@
   "scripts": {
     "dev": "vite",
     "release:win": "vue-tsc --noEmit && vite build && electron-builder --win",
-    "preview": "vite preview",
     "rebuild": "electron rebuild.js",
     "postinstall": "electron-builder install-app-deps",
     "lint": "eslint .",
@@ -37,6 +36,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "echarts": "^5.5.1",
+    "electron-updater": "^6.2.1",
     "extract-file-icon": "^0.3.2",
     "get-windows": "^9.1.1",
     "lucide-vue-next": "^0.408.0",

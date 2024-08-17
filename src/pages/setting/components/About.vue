@@ -1,14 +1,23 @@
 <script setup lang='ts'>
 import { ref } from 'vue'
-import { MonitorUp, Terminal } from 'lucide-vue-next'
+import { Loader2, MonitorUp, Terminal } from 'lucide-vue-next'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+
+const isChecking = ref(false)
 
 function goto(url: string) {
   // TODO: debounce
   setTimeout(() => {
     window.open(url)
   }, 200)
+}
+
+function checkUpdate() {
+  isChecking.value = true
+  setTimeout(() => {
+    isChecking.value = false
+  }, 1000)
 }
 </script>
 
@@ -31,9 +40,10 @@ function goto(url: string) {
     </div>
     <div class="version">
       <span>版本号:</span><span>0.0.1-alpha</span>
-      <Button variant="outline" class="ml-4 update-btn">
-        <MonitorUp class="w-4 h-4" />
-        <span class="ml-2">检查更新</span>
+      <Button variant="outline" class="ml-4 update-btn" :disabled="isChecking" @click="checkUpdate">
+        <Loader2 v-if="isChecking" class="w-4 h-4 mr-2 animate-spin" />
+        <MonitorUp v-else class="w-4 h-4" />
+        <span class="ml-2">{{ isChecking ? '正在检查更新...' : '检查更新' }}</span>
       </Button>
     </div>
     <div class="project-link">
@@ -85,6 +95,8 @@ function goto(url: string) {
   .update-btn{
     height: 35px;
     font-size: 12px;
+     vertical-align: middle;
+    align-items: flex-start;
   }
 
   .link:hover{
