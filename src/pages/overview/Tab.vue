@@ -7,6 +7,7 @@ import getUsageTimeApi from '@/api/getUsageTime'
 import { handleTimeRangeData } from '@/utils'
 import CardGroup from '@/components/CardGroup.vue'
 
+// update file
 const props = defineProps({
   appData: {
     type: Array as () => AppData[],

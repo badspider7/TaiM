@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import type { AppData, DailyLogModels } from '@@/type/types'
 import type { Ref } from 'vue'
-import TapBar from './TabBar.vue'
+import Tab from './Tab.vue'
 import AppList from './FrequentApp.vue'
 import getUsageTimeApi from '@/api/getUsageTime'
 import { formatDateTime, handleTimeRangeData } from '@/utils'
@@ -44,7 +44,7 @@ function tabChange(activeTab: string) {
       概览
     </div>
     <div class="choose-time mt-5">
-      <TapBar :app-data="appData" @tab-change="tabChange" />
+      <Tab :app-data="appData" @tab-change="tabChange" />
       <AppList :app-data="appData" style="height:calc(100% - 145px)" />
     </div>
   </div>

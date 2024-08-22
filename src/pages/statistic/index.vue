@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import TabBar from './TabBar.vue'
+import Tab from './Tab.vue'
 </script>
 
 <template>
@@ -8,7 +8,7 @@ import TabBar from './TabBar.vue'
       统计
     </div>
     <div class="app-body mt-5">
-      <TabBar />
+      <Tab />
     </div>
   </div>
 </template>
