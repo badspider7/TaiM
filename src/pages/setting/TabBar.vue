@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { onMounted, ref, shallowRef, watch } from 'vue'
+import { ref, shallowRef } from 'vue'
 import Data from './components/Data.vue'
 import Common from './components/Common.vue'
 import Behavior from './components/Behavior.vue'

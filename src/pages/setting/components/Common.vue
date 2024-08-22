@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { reactive, ref } from 'vue'
+import { reactive } from 'vue'
 import defaultConfig from '@@/const/defaultConfig'
 import { Switch } from '@/components/ui/switch'
 import {

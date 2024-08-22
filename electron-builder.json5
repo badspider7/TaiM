@@ -5,17 +5,17 @@
   "asar": true,
   "productName": "TaiM",
   // 更新服务器信息
-  publish: [
+  "publish": [
     {
-      provider: 'github',
-      owner: 'badspider7',
-      repo: 'Taim',
-    },
+      "provider": "github",
+      "owner": "badspider7",
+      "repo": "Taim"
+    }
   ],
-  // 更新日志 
-  releaseInfo: {
-    releaseName: 'normal', // normal 弹窗 / major 强制更新
-    releaseNotesFile: './release/releaseNotes.md',
+  // 更新日志
+  "releaseInfo": {
+    "releaseName": "normal", // normal 弹窗 / major 强制更新
+    "releaseNotesFile": "./release/releaseNotes.md"
   },
   "directories": {
     "output": "release/${version}"
