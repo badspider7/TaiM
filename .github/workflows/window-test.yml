@@ -34,5 +34,5 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Build
-        run: pnpm build
+      - name: Release window
+        run: pnpm release:win
