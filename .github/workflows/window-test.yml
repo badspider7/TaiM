@@ -1,4 +1,4 @@
-name: Unit Test
+name: Window Test
 
 on:
   push:
@@ -22,7 +22,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version: '21'
+          node-version: 21.2.0
           cache: pnpm
 
       - name: Install deps
