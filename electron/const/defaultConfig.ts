@@ -1,4 +1,4 @@
-export default {
+const defaultConfig: IConfig = {
   version: 1,
   common: {
     autoLaunch: true,
@@ -13,3 +13,21 @@ export default {
 
   },
 }
+
+export interface IConfig {
+  version: number
+  common: {
+    autoLaunch: boolean
+    keepWindowSize: boolean
+    lang: string
+    theme: string
+  }
+  actions: {
+
+  }
+  data: {
+
+  }
+}
+
+export default defaultConfig

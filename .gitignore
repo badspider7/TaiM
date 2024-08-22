@@ -26,8 +26,3 @@ release
 *.sw?
 *.db
 *.db-*
-
-# lockfile
-package-lock.json
-pnpm-lock.yaml
-yarn.lock
