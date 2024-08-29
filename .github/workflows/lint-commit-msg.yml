@@ -33,6 +33,3 @@ jobs:
 
       - name: Lint
         run: pnpm lint
-
-      - name: Release window
-        run: pnpm release:win

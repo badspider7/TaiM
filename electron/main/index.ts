@@ -4,7 +4,7 @@ import path from 'node:path'
 import os from 'node:os'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { setupHandle } from '../handle'
-import { clearAllTimer, startRecord } from '../utils'
+import { clearAllTimer, isComputerSleep, startRecord } from '../utils'
 import logger from '../logger'
 import { initDb } from '../db'
 
@@ -95,6 +95,7 @@ export async function createWindow() {
     })
     // 开始统计应用时间
     startRecord()
+    isComputerSleep(win)
   })
 
   // Make all links open with the browser, not with the application
