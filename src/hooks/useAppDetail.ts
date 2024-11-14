@@ -10,16 +10,16 @@ export function useAppDetail(TimeList: Array<DailyLogModels | HoursLogModels>) {
     return map
   }, {})
 
-  console.log('appInfo', appInfo)
-  console.log('appInfoMap===', appInfoMap)
+  // console.log('appInfo', appInfo)
+  // console.log('appInfoMap===', appInfoMap)
 
   const appDataList: Array<AppData> = []
-  TimeList.forEach((item) => {
+  TimeList.forEach(async (item) => {
     let appModel = appInfoMap[item.appModelId]
     if (!appModel) {
       // 如果当前appModelId不在appInfoMap中，则尝试从appStore中获取
-      const updatedAppInfo: any = appStore.getAppInfo()
-      console.log('updatedAppInfo===', updatedAppInfo)
+      const updatedAppInfo: any = await appStore.getAppInfo()
+      // console.log('updatedAppInfo===', updatedAppInfo)
       // TODO: 这里会出现bug
       // 更新appInfoMap
       const updatedAppInfoMap = updatedAppInfo.reduce((map: Record<number, AppModel>, app: AppModel) => {

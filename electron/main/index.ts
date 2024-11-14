@@ -7,6 +7,7 @@ import { setupHandle } from '../handle'
 import { clearAllTimer, isComputerSleep, startRecord } from '../utils'
 import logger from '../logger'
 import { initDb } from '../db'
+// import { initConfig } from '../utils/config'
 
 const VUEJS3_DEVTOOLS = 'nhdogjmejiglipccpnnnanhbledajbpd'
 const require = createRequire(import.meta.url)
@@ -86,16 +87,16 @@ export async function createWindow() {
 
   win.once('ready-to-show', () => {
     win?.show()
-    win.setMinimumSize(800, 600)
+    win?.setMinimumSize(800, 600)
   })
 
   win.webContents.on('did-finish-load', () => {
-    win.on('resized', () => {
+    win?.on('resized', () => {
       win?.webContents.send('refresh-chart', '')
     })
     // 开始统计应用时间
     startRecord()
-    isComputerSleep(win)
+    isComputerSleep(win!)
   })
 
   // Make all links open with the browser, not with the application
@@ -122,9 +123,10 @@ ipcMain.on('open-url', (e, args) => {
   void shell.openExternal(args)
 })
 app.whenReady().then(async () => {
+  // initConfig()
   initDb()
   void createWindow()
-  setupHandle(win)
+  setupHandle(win!)
   // if (process.env.VITE_DEV_SERVER_URL) {
   //   installExtension(VUEJS3_DEVTOOLS, { loadExtensionOptions: { allowFileAccess: true } })
   //     .then(name => logger.debug(`Added Extension:  ${name}`))

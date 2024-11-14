@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import { reactive } from 'vue'
 import defaultConfig from '@@/const/defaultConfig'
+import type { IConfig } from '@@/const/defaultConfig'
 import { Switch } from '@/components/ui/switch'
 import {
   Select,
@@ -11,6 +12,10 @@ import {
 } from '@/components/ui/select'
 
 const config = reactive(defaultConfig)
+
+async function changeConfig<K extends keyof IConfig['common']>(key: K, value: IConfig['common'][K]) {
+  config.common[key] = value
+}
 </script>
 
 <template>
@@ -26,8 +31,9 @@ const config = reactive(defaultConfig)
           </div>
           <Select
             v-model="config.common.lang"
+            @update:model-value="changeConfig('lang', config.common.lang)"
           >
-            <SelectTrigger class="w-[100px]">
+            <SelectTrigger class="w-[100px] h-[35px] p-2">
               <SelectValue placeholder="选择语言" />
             </SelectTrigger>
             <SelectContent>
@@ -48,7 +54,7 @@ const config = reactive(defaultConfig)
             <Switch
               class="mr-2"
               :checked="config.common.autoLaunch"
-              @update:checked="config.common.autoLaunch = !config.common.autoLaunch"
+              @update:checked="changeConfig('autoLaunch', !config.common.autoLaunch)"
             />
             <span>{{ config.common.autoLaunch ? '开' : '关' }}</span>
           </div>
@@ -61,7 +67,7 @@ const config = reactive(defaultConfig)
             <Switch
               class="mr-2"
               :checked="config.common.keepWindowSize"
-              @update:checked="config.common.keepWindowSize = !config.common.keepWindowSize"
+              @update:checked="changeConfig('keepWindowSize', !config.common.keepWindowSize)"
             />
             <span>{{ config.common.keepWindowSize ? '开' : '关' }}</span>
           </div>
@@ -79,8 +85,9 @@ const config = reactive(defaultConfig)
           </div>
           <Select
             v-model="config.common.theme"
+            @update:checked="changeConfig('theme', config.common.theme)"
           >
-            <SelectTrigger class="w-[100px]">
+            <SelectTrigger class="w-[100px] h-[35px] p-2">
               <SelectValue placeholder="选择主题" />
             </SelectTrigger>
             <SelectContent>

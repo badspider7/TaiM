@@ -12,6 +12,7 @@ function formatTime(second: number) {
 }
 
 // 当前的累计使用时间
+// TODO: 优化 对小于1小时的显示分钟
 const currentTotalTime = ref(0)
 const currentAppCount = ref(0)
 const mostTimeUsageApp = ref<AppData>({} as AppData)
