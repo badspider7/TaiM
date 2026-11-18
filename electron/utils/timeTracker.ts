@@ -5,6 +5,7 @@ import { getConfig } from '../config'
 import logger from '../logger'
 import { cache } from './activeAppCache'
 import { splitInterval } from './usage'
+import { isSelfApp } from './selfApp'
 
 export class TimeTracker {
   private timer?: NodeJS.Timeout
@@ -73,7 +74,7 @@ export class TimeTracker {
       this.checkpoint()
       this.current = undefined
       const settings = getConfig()
-      if (!info?.owner?.name || this.idleTime() >= settings.actions.idleMinutes * 60)
+      if (!info?.owner?.name || isSelfApp(info.owner) || this.idleTime() >= settings.actions.idleMinutes * 60)
         return
       const { name, path: file } = info.owner
       const ignored = [...ignoreNameList, ...settings.actions.ignoredApps].map(n => n.toLowerCase())

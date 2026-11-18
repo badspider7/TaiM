@@ -6,6 +6,7 @@ import { getDB } from '../db/better-sqlite3'
 import { type Backup, csvCell, validateBackup } from '../db/backup'
 import tracker from '../utils/timeTracker'
 import { cache } from '../utils/activeAppCache'
+import { excludeSelfHistory } from '../db/excludeSelf'
 
 export function flushUsage() {
   tracker.checkpoint()
@@ -106,6 +107,7 @@ export function setupSettings(win: BrowserWindow) {
         for (const h of backup.hours) hour.run(h.hoursTime, h.time, h.appModelId)
         db.exec(`INSERT INTO DailyLogModels(dayTime, time, appModelId) SELECT substr(hoursTime, 1, 10) || ' 00:00:00', SUM(time), appModelId FROM HoursLogModels GROUP BY substr(hoursTime, 1, 10), appModelId;
           UPDATE AppModels SET totalTime = COALESCE((SELECT SUM(time) FROM HoursLogModels WHERE appModelId = AppModels.id), 0);`)
+        excludeSelfHistory()
       })()
       return { backupPath,
       }

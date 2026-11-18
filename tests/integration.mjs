@@ -32,7 +32,7 @@ async function run() {
     const { TimeTracker } = await import('../electron/utils/timeTracker.ts')
     const { cache } = await import('../electron/utils/activeAppCache.ts')
     const db = getDB()
-    const record = { name: 'Editor', file: process.execPath, iconFile: '', actionDes: 'Test', startTime: '2026-11-17 23:00:00', duration: 30 }
+    const record = { name: 'Editor', file: 'C:\\Apps\\Editor.exe', iconFile: '', actionDes: 'Test', startTime: '2026-11-17 23:00:00', duration: 30 }
     await test('Fresh and repeated database initialization', () => {
       initDb()
       initDb()
@@ -46,6 +46,24 @@ async function run() {
       for (const s of segments) write({ ...record, ...s })
       assert.equal(db.prepare('SELECT totalTime FROM AppModels').get().totalTime, 60)
       assert.equal(db.prepare('SELECT COUNT(*) AS n FROM DailyLogModels').get().n, 2)
+    })
+    await test('Self usage is rejected and legacy self history is removed without changing other usage', async () => {
+      const { isSelfApp } = await import('../electron/utils/selfApp.ts')
+      assert.equal(isSelfApp({ name: 'Changed name', path: process.execPath.toUpperCase() }), true)
+      assert.equal(isSelfApp({ name: 'Changed name', path: 'C:\\Apps\\other.exe', processId: process.pid }), true)
+      assert.equal(isSelfApp({ name: 'Taim!', path: 'C:\\Old\\electron.exe' }), true)
+      assert.equal(isSelfApp({ name: 'Changed name', path: 'C:\\Old\\TaiM.exe' }), true)
+      assert.equal(isSelfApp({ name: 'TaiM notes', path: 'C:\\Apps\\notes.exe' }), false)
+      write({ ...record, name: 'TaiM', file: 'C:\\TaiM\\TaiM.exe' })
+      assert.equal(db.prepare('SELECT COUNT(*) AS n FROM AppModels').get().n, 1)
+      const id = db.prepare('INSERT INTO AppModels(name, file, totalTime) VALUES (\'Taim!\', \'C:\\Old\\TaiM.exe\', 50)').run().lastInsertRowid
+      db.prepare('INSERT INTO HoursLogModels(appModelId, hoursTime, time) VALUES (?, ?, 50)').run(id, record.startTime)
+      db.prepare('INSERT INTO DailyLogModels(appModelId, dayTime, time) VALUES (?, ?, 50)').run(id, '2026-11-17 00:00:00')
+      initDb()
+      assert.equal(db.prepare('SELECT * FROM AppModels WHERE id = ?').get(id), undefined)
+      assert.equal(db.prepare('SELECT * FROM HoursLogModels WHERE appModelId = ?').get(id), undefined)
+      assert.equal(db.prepare('SELECT * FROM DailyLogModels WHERE appModelId = ?').get(id), undefined)
+      assert.equal(db.prepare('SELECT totalTime FROM AppModels').get().totalTime, 60)
     })
     await test('Invalid duration ignored and failed writes roll back all totals', () => {
       write({ ...record, duration: -300 })
@@ -74,7 +92,7 @@ async function run() {
     })
     await test('Tracker flushes on stop, never subtracts idle time, and skips long gaps', async () => {
       let now = new Date(2026, 10, 18, 9).getTime()
-      const info = { title: 'Test', owner: { name: 'Tracker', path: process.execPath } }
+      const info = { title: 'Test', owner: { name: 'Tracker', path: 'C:\\Apps\\Tracker.exe' } }
       const tracker = new TimeTracker(async () => info, () => 0, () => now)
       tracker.start()
       await pause(150)
@@ -95,6 +113,12 @@ async function run() {
       now += 1000
       ignored.clearAll()
       assert.equal(db.prepare('SELECT * FROM AppModels WHERE name = \'Ignored\'').get(), undefined)
+      const self = new TimeTracker(async () => ({ ...info, owner: { name: 'TaiM', path: process.execPath, processId: process.pid } }), () => 0, () => now)
+      self.start()
+      await pause(50)
+      now += 1000
+      self.clearAll()
+      assert.equal(db.prepare('SELECT * FROM AppModels WHERE name = \'TaiM\'').get(), undefined)
       let resolve
       const pending = new TimeTracker(() => new Promise((r) => {
         resolve = r

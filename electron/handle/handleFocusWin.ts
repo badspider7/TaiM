@@ -3,9 +3,10 @@ import appModelDB from '../db/appModels'
 import hoursLogDB from '../db/hoursLogModels'
 import dailyLogDB from '../db/dailyLogModels'
 import type { UsageRecord } from '../utils/usage'
+import { isSelfApp } from '../utils/selfApp'
 
 export function executeMethodsInOrder(record: UsageRecord) {
-  if (!record.name || !Number.isFinite(record.duration) || record.duration <= 0)
+  if (!record.name || isSelfApp({ name: record.name, path: record.file }) || !Number.isFinite(record.duration) || record.duration <= 0)
     return
   getDB().transaction(() => {
     let model = appModelDB.getAppModel(record.name)

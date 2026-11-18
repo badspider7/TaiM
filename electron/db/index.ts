@@ -3,6 +3,7 @@ import appModelDB from './appModels'
 import hoursLogModelDB from './hoursLogModels'
 import dailyLogModelDB from './dailyLogModels'
 import { getDB } from './better-sqlite3'
+import { excludeSelfHistory } from './excludeSelf'
 
 export interface DBConfig {
 
@@ -24,5 +25,6 @@ export function initDb() {
       CREATE INDEX IF NOT EXISTS idx_daily_app_time ON DailyLogModels(dayTime, appModelId);
       CREATE INDEX IF NOT EXISTS idx_app_name ON AppModels(name);
     `)
+    excludeSelfHistory()
   })()
 }
