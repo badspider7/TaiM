@@ -5,7 +5,7 @@ import type { Ref } from 'vue'
 import Tab from './Tab.vue'
 import AppList from './FrequentApp.vue'
 import getUsageTimeApi from '@/api/getUsageTime'
-import { formatDateTime, handleTimeRangeData } from '@/utils'
+import { handleTimeRangeData } from '@/utils'
 import { Time, formatDate } from '@/utils/timerEvent'
 import { useAppDetail } from '@/hooks/useAppDetail'
 

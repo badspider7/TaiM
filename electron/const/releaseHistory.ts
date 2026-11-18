@@ -1,7 +1,7 @@
 // Keep the local history available even when the update server cannot be reached.
 export const releaseHistory = [
   {
-    version: '0.0.1-beta',
+    version: '0.0.1-beta.1',
     date: '2026-11-18',
     title: '首个公开测试版',
     notes: [
