@@ -10,8 +10,9 @@ if (process.env.RELEASE_TAG)
 const directory = path.join('release', version)
 const installerName = `TaiM-Windows-${version}-Setup.exe`
 const files = await fs.readdir(directory)
-const manifests = files.filter(name => name.endsWith('.yml'))
-assert.ok(manifests.includes('latest.yml'), 'Missing GitHub update manifest')
+// electron-builder also emits builder-debug.yml on CI; it is not update metadata.
+const manifests = ['latest.yml']
+assert.ok(files.includes('latest.yml'), 'Missing GitHub update manifest')
 assert.ok((await fs.stat(path.join(directory, `${installerName}.blockmap`))).size > 0, 'Missing blockmap')
 const installer = await fs.readFile(path.join(directory, installerName))
 const sha512 = createHash('sha512').update(installer).digest('base64')

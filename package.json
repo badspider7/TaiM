@@ -1,7 +1,7 @@
 {
   "name": "taim",
   "type": "module",
-  "version": "0.0.1-beta.1",
+  "version": "0.0.1-beta.2",
   "private": true,
   "description": "Taim!",
   "author": "badspider7",
@@ -31,7 +31,7 @@
     "commit": "commit",
     "typecheck": "vue-tsc --noEmit",
     "build": "pnpm typecheck && vite build",
-    "test": "node tests/run.mjs",
+    "test": "node tests/release.mjs && node tests/run.mjs",
     "verify:release": "node scripts/verify-release.mjs"
   },
   "dependencies": {

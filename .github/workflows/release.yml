@@ -67,7 +67,7 @@ jobs:
           path: |
             release/${{ steps.version.outputs.version }}/*.exe
             release/${{ steps.version.outputs.version }}/*.blockmap
-            release/${{ steps.version.outputs.version }}/*.yml
+            release/${{ steps.version.outputs.version }}/latest.yml
             release/${{ steps.version.outputs.version }}/SHA256SUMS.txt
 
   publish:
