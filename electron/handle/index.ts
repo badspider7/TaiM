@@ -3,6 +3,7 @@ import { isMaximized, setupTitleBarHandler } from './handleTitleBar'
 import { setupTray } from './handleTray'
 import { handleUsageData } from './handleUsageData'
 import { setupSettings } from './handleSettings'
+import { setupWebsites } from './handleWebsites'
 
 export function setupHandle(win: BrowserWindow) {
   setupTitleBarHandler(win)
@@ -10,4 +11,5 @@ export function setupHandle(win: BrowserWindow) {
   isMaximized(win)
   handleUsageData()
   setupSettings(win)
+  setupWebsites(win)
 }

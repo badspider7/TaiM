@@ -15,6 +15,7 @@
     "dist",
     "dist-electron",
     "dist-native",
+    "browser-extension",
     "!**/node_modules/**/*.ts",
     "!**/node_modules/**/*.js.map",
     "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",

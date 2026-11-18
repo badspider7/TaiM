@@ -11,6 +11,7 @@ import { getConfig } from '../config'
 import { setupUpdates } from '../update'
 import { cache } from '../utils/activeAppCache'
 import { refreshApplicationIcons } from '../utils/appIcons'
+import { browserTracking } from '../browser/tracking'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -141,6 +142,7 @@ app.on('window-all-closed', () => {
 app.on('before-quit', () => {
   quitting = true
   clearAllTimer()
+  browserTracking.stop()
 })
 
 // 防止页面被冻结
@@ -152,6 +154,7 @@ ipcMain.on('open-url', (e, args) => {
 })
 app.whenReady().then(async () => {
   initDb()
+  await browserTracking.start()
   await refreshApplicationIcons()
   await createWindow()
   setupHandle(win!)

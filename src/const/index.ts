@@ -27,6 +27,12 @@ export const DEFAULT_DISPLAY_SIDEBAR: sidebarItem[] = [
     path: '/detail',
   },
   {
+    title: '网站',
+    name: 'websites',
+    icon: 'website',
+    path: '/websites',
+  },
+  {
     title: '分类',
     name: 'category',
     icon: 'category',

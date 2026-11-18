@@ -2,6 +2,12 @@ import { contextBridge, ipcRenderer } from 'electron'
 
 const events = new Set(['refresh-chart', 'window.maximize', 'updater:state'])
 const invokes = new Set([
+  'websites:status',
+  'websites:enable',
+  'websites:extension',
+  'websites:range',
+  'websites:export',
+  'websites:clear',
   'titleBarControl:minimize',
   'titleBarControl:maximizeOrUnmaximize',
   'titleBarControl:close',

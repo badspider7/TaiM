@@ -1,3 +1,4 @@
+import { initWebsiteTable } from '../browser/tracking'
 import tableVersionDB from './tableVersion'
 import appModelDB from './appModels'
 import hoursLogModelDB from './hoursLogModels'
@@ -26,5 +27,6 @@ export function initDb() {
       CREATE INDEX IF NOT EXISTS idx_app_name ON AppModels(name);
     `)
     excludeSelfHistory()
+    initWebsiteTable()
   })()
 }

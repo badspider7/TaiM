@@ -8,6 +8,7 @@ import tracker from '../utils/timeTracker'
 import { cache } from '../utils/activeAppCache'
 import { excludeSelfHistory } from '../db/excludeSelf'
 import { refreshApplicationIcons } from '../utils/appIcons'
+import { browserTracking } from '../browser/tracking'
 
 export function flushUsage() {
   tracker.checkpoint()
@@ -66,6 +67,7 @@ export function setupSettings(win: BrowserWindow) {
     if (format === 'json') {
       const backup: Backup = { format: 'taim-backup', version: 1, exportedAt: new Date().toISOString(), apps: db.prepare('SELECT * FROM AppModels').all() as Backup['apps'], hours: db.prepare('SELECT * FROM HoursLogModels').all() as Backup['hours'], categories: db.prepare('SELECT * FROM Categories').all() as Backup['categories'],
       }
+      backup.websites = db.prepare('SELECT * FROM WebsiteHours').all() as Backup['websites']
       content = JSON.stringify(backup, null, 2)
     }
     else {
@@ -87,7 +89,7 @@ export function setupSettings(win: BrowserWindow) {
     if ((await fs.stat(file)).size > 100 * 1024 * 1024)
       throw new Error('备份文件不能超过 100 MB')
     const backup = validateBackup(JSON.parse(await fs.readFile(file, 'utf8')))
-    const confirmation = await dialog.showMessageBox(win, { type: 'warning', message: '用备份替换现有统计数据？', detail: `将恢复 ${backup.apps.length} 个应用、${backup.hours.length} 条小时记录。替换前会自动备份当前数据库。`, buttons: ['取消', '恢复备份'], defaultId: 0, cancelId: 0,
+    const confirmation = await dialog.showMessageBox(win, { type: 'warning', message: '用备份替换现有统计数据？', detail: `将恢复 ${backup.apps.length} 个应用、${backup.hours.length} 条应用小时记录、${backup.websites?.length ?? 0} 条网站小时记录。旧备份不含网站记录，会清空现有网站记录。替换前会自动备份当前数据库。`, buttons: ['取消', '恢复备份'], defaultId: 0, cancelId: 0,
     })
     if (confirmation.response !== 1) {
       return { canceled: true,
@@ -99,7 +101,7 @@ export function setupSettings(win: BrowserWindow) {
       const backupPath = path.join(app.getPath('userData'), `before-import-${Date.now()}.sqlite3`)
       await db.backup(backupPath)
       db.transaction(() => {
-        db.exec('DELETE FROM DailyLogModels; DELETE FROM HoursLogModels; DELETE FROM AppModels; DELETE FROM Categories;')
+        db.exec('DELETE FROM DailyLogModels; DELETE FROM HoursLogModels; DELETE FROM AppModels; DELETE FROM Categories; DELETE FROM WebsiteHours;')
         const category = db.prepare('INSERT INTO Categories(id, name) VALUES (?, ?)')
         for (const c of backup.categories) category.run(c.id, c.name)
         const model = db.prepare('INSERT INTO AppModels(id, name, alias, description, file, categoryId, iconFile, totalTime) VALUES (?, ?, ?, ?, ?, ?, ?, 0)')
@@ -109,7 +111,10 @@ export function setupSettings(win: BrowserWindow) {
         db.exec(`INSERT INTO DailyLogModels(dayTime, time, appModelId) SELECT substr(hoursTime, 1, 10) || ' 00:00:00', SUM(time), appModelId FROM HoursLogModels GROUP BY substr(hoursTime, 1, 10), appModelId;
           UPDATE AppModels SET totalTime = COALESCE((SELECT SUM(time) FROM HoursLogModels WHERE appModelId = AppModels.id), 0);`)
         excludeSelfHistory()
+        const website = db.prepare('INSERT INTO WebsiteHours(browser, url, domain, title, hoursTime, time) VALUES (@browser, @url, @domain, @title, @hoursTime, @time)')
+        for (const w of backup.websites ?? []) website.run(w)
       })()
+      browserTracking.pause()
       await refreshApplicationIcons()
       return { backupPath,
       }

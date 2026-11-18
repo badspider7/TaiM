@@ -24,7 +24,7 @@ async function run(channel: string, format?: string) {
   <div class="settings-panel">
     <h2>备份与导出</h2>
     <p class="text-sm text-muted-foreground my-4">
-      JSON 包含所有应用、分类和小时记录，可用于恢复。CSV 可用 Excel 打开，用于分析。备份不包含通用设置与忽略规则。
+      JSON 包含所有应用、分类、应用及网站小时记录，可用于恢复。CSV 可用 Excel 打开，用于分析；网站 CSV 在网站页面导出。备份不包含通用设置、忽略规则与浏览器配对密钥。
     </p>
     <div class="toolbar">
       <button class="action-button" :disabled="busy" @click="run('data:export', 'json')">

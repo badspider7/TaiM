@@ -1,4 +1,5 @@
 import type { AppModel, HoursLogModels } from '../type/types'
+import { type WebsiteHour, normalizeWebUrl } from '../browser/tracking'
 
 export interface Category {
   id: number
@@ -11,6 +12,7 @@ export interface Backup {
   apps: AppModel[]
   hours: HoursLogModels[]
   categories: Category[]
+  websites?: WebsiteHour[]
 }
 
 export function validateBackup(value: unknown): Backup {
@@ -52,6 +54,29 @@ export function validateBackup(value: unknown): Backup {
     if (buckets.has(key))
       return fail()
     buckets.add(key)
+  }
+  if (v.websites !== undefined && !Array.isArray(v.websites))
+    return fail()
+  const websiteBuckets = new Set<string>()
+  for (const w of v.websites ?? []) {
+    if (!w || !['chrome', 'edge'].includes(w.browser) || typeof w.url !== 'string'
+      || typeof w.title !== 'string' || w.title.length > 512 || !Number.isFinite(w.time) || w.time < 0 || w.time > Number.MAX_SAFE_INTEGER
+      || typeof w.hoursTime !== 'string' || !/^\d{4}-\d{2}-\d{2} (?:[01]\d|2[0-3]):00:00$/.test(w.hoursTime)) {
+      return fail()
+    }
+    try {
+      const normalized = normalizeWebUrl(w.url)
+      if (normalized.url !== w.url || normalized.domain !== w.domain)
+        return fail()
+      const date = new Date(`${w.hoursTime.slice(0, 10)}T12:00:00Z`)
+      if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== w.hoursTime.slice(0, 10))
+        return fail()
+    }
+    catch { return fail() }
+    const key = JSON.stringify([w.browser, w.url, w.hoursTime])
+    if (websiteBuckets.has(key))
+      return fail()
+    websiteBuckets.add(key)
   }
   return v
 }

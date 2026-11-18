@@ -1,5 +1,6 @@
 import { executeMethodsInOrder } from '../handle/handleFocusWin'
 import logger from '../logger'
+import { browserTracking } from '../browser/tracking'
 import type { UsageRecord } from './usage'
 
 class UsageCache {
@@ -12,6 +13,10 @@ class UsageCache {
   }
 
   flush = (strict = false) => {
+    try {
+      browserTracking.flush()
+    }
+    catch (error) { logger.error('保存网站统计失败，将在下次重试', error) }
     for (const [key, record] of this.records) {
       try {
         executeMethodsInOrder(record)

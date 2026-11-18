@@ -3,6 +3,7 @@ import { powerMonitor } from 'electron'
 import { ignoreNameList } from '../const/const'
 import { getConfig } from '../config'
 import logger from '../logger'
+import { browserTracking } from '../browser/tracking'
 import { cache } from './activeAppCache'
 import { splitInterval } from './usage'
 import { isSelfApp } from './selfApp'
@@ -31,6 +32,7 @@ export class TimeTracker {
   }
 
   checkpoint(now = this.now()) {
+    browserTracking.checkpoint(now)
     if (!this.current)
       return
     // Skip long unobserved gaps caused by suspend, a delayed poll, or a clock jump.
@@ -45,6 +47,7 @@ export class TimeTracker {
 
   sleep() {
     this.checkpoint()
+    browserTracking.pause()
     this.current = undefined
     this.suspended = true
     this.generation++
@@ -72,6 +75,7 @@ export class TimeTracker {
       if (generation !== this.generation || !this.timer)
         return
       this.checkpoint()
+      browserTracking.pause()
       this.current = undefined
       const settings = getConfig()
       if (!info?.owner?.name || isSelfApp(info.owner) || this.idleTime() >= settings.actions.idleMinutes * 60)
@@ -91,8 +95,10 @@ export class TimeTracker {
         return
       this.current = { name, file, iconFile, actionDes: info.title, since: this.now(),
       }
+      browserTracking.observe(file, info.title, this.now())
     }
     catch (error) {
+      browserTracking.pause()
       this.current = undefined
       logger.warn('读取活动窗口失败', error)
     }
