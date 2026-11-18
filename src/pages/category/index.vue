@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useAppInfo } from '@/store/app'
 import { Time } from '@/utils/timerEvent'
+import AppSelect from '@/components/AppSelect.vue'
 
 interface Category {
   id: number
@@ -9,6 +10,7 @@ interface Category {
 }
 const store = useAppInfo()
 const categories = ref<Category[]>([])
+const categoryOptions = computed(() => [{ value: '0', label: '未分类' }, ...categories.value.map(c => ({ value: String(c.id), label: c.name }))])
 const name = ref('')
 const editing = ref<number | null>(null)
 const error = ref('')
@@ -52,8 +54,8 @@ async function remove(c: Category) {
     await load()
   })
 }
-async function assign(id: number, alias: string, event: Event) {
-  const categoryId = Number((event.target as HTMLSelectElement).value)
+async function assign(id: number, alias: string, value: string) {
+  const categoryId = Number(value)
   await action(async () => {
     await window.ipcRenderer.invoke('apps:update', id, alias, categoryId)
     await load()
@@ -99,13 +101,8 @@ function total(id: number) {
       暂无匹配的应用，开始使用软件后会自动记录。
     </p>
     <div v-for="a in apps" :key="a.id" class="option-row">
-      <span>{{ a.alias || a.name }}</span><select :value="a.categoryId" :disabled="busy" :aria-label="`${a.name}的分类`" @change="assign(a.id!, a.alias, $event)">
-        <option :value="0">
-          未分类
-        </option><option v-for="c in categories" :key="c.id" :value="c.id">
-          {{ c.name }}
-        </option>
-      </select>
+      <span class="min-w-0 break-all">{{ a.alias || a.name }}</span>
+      <AppSelect :model-value="String(a.categoryId)" :label="`${a.name}的分类`" :options="categoryOptions" :disabled="busy" class="w-[180px] shrink-0" @update:model-value="assign(a.id!, a.alias, $event)" />
     </div>
   </div>
 </template>

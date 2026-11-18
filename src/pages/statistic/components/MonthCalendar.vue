@@ -102,7 +102,7 @@ function calcChartData(xAxis: number[], data: DailyLogModels[]) {
       :default-value="activeMonth"
       @update:model-value="valueChange"
     >
-      <SelectTrigger>
+      <SelectTrigger aria-label="统计月份">
         <SelectValue placeholder="选择日期" />
       </SelectTrigger>
       <SelectContent class="max-h-[220px]">

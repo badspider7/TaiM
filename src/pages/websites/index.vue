@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Time, formatDate } from '@/utils/timerEvent'
+import AppSelect from '@/components/AppSelect.vue'
 
 interface Row { browser: string, url: string, domain: string, title: string, time: number, pageCount: number }
 const start = ref(formatDate(new Date()).slice(0, 10))
@@ -88,14 +89,7 @@ onUnmounted(() => clearInterval(timer))
     <form class="toolbar mt-5" @submit.prevent="run('load')">
       <input v-model="start" type="date" aria-label="网站开始日期"><span>至</span>
       <input v-model="end" type="date" aria-label="网站结束日期">
-      <select v-model="group" aria-label="网站汇总方式" :disabled="busy" @change="changeGroup">
-        <option value="domain">
-          按域名汇总
-        </option>
-        <option value="url">
-          按具体网址
-        </option>
-      </select>
+      <AppSelect v-model="group" label="网站汇总方式" :options="[{ value: 'domain', label: '按域名汇总' }, { value: 'url', label: '按具体网址' }]" :disabled="busy" @change="changeGroup" />
       <button class="action-button" :disabled="busy">
         {{ busy ? '加载中…' : '查询 / 刷新' }}
       </button>

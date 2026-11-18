@@ -90,7 +90,7 @@ function calcChartData(data: AppData[]) {
 <template>
   <div class="week-calendar w-[100px]">
     <Select v-model="weektype">
-      <SelectTrigger>
+      <SelectTrigger aria-label="统计周范围">
         <SelectValue placeholder="选择日期" />
       </SelectTrigger>
       <SelectContent>

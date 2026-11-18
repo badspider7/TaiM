@@ -7,6 +7,7 @@ import { BrowserTracking, browserTracking, normalizeWebUrl } from '../electron/b
 import { getDB } from '../electron/db/better-sqlite3.ts'
 import { validateBackup } from '../electron/db/backup.ts'
 import { TimeTracker } from '../electron/utils/timeTracker.ts'
+import { chooseSelect } from './ui-select.mjs'
 
 export async function testWebsites(test, { temporary, win, invoke, js, waitText }) {
   const db = getDB()
@@ -223,7 +224,7 @@ export async function testWebsites(test, { temporary, win, invoke, js, waitText 
     await js('document.querySelector(\'[aria-label="网站开始日期"]\').value = \'2026-11-18\'; document.querySelector(\'[aria-label="网站开始日期"]\').dispatchEvent(new Event(\'input\', { bubbles: true })); document.querySelector(\'[aria-label="网站结束日期"]\').value = \'2026-11-18\'; document.querySelector(\'[aria-label="网站结束日期"]\').dispatchEvent(new Event(\'input\', { bubbles: true }))')
     await js('[...document.querySelectorAll(\'button\')].find(b => b.textContent.trim() === \'查询 / 刷新\').click()')
     await waitText('example.test')
-    await js('document.querySelector(\'[aria-label="网站汇总方式"]\').value = \'url\'; document.querySelector(\'[aria-label="网站汇总方式"]\').dispatchEvent(new Event(\'change\', { bubbles: true }))')
+    await chooseSelect(js, '网站汇总方式', '按具体网址')
     await waitText('https://example.test/a?lesson=1')
     await fs.writeFile(path.join(temporary, 'websites.png'), (await win.webContents.capturePage()).toPNG())
     const exportPath = path.join(temporary, 'websites.csv')
@@ -242,7 +243,7 @@ export async function testWebsites(test, { temporary, win, invoke, js, waitText 
     await js('[...document.querySelectorAll(\'button\')].find(b => b.textContent.trim() === \'查询 / 刷新\').click()')
     await waitText(title)
     assert.equal(await js('document.querySelectorAll(\'.website-table img\').length'), 0)
-    await js('document.querySelector(\'[aria-label="网站汇总方式"]\').value = \'domain\'; document.querySelector(\'[aria-label="网站汇总方式"]\').dispatchEvent(new Event(\'change\', { bubbles: true }))')
+    await chooseSelect(js, '网站汇总方式', '按域名汇总')
     await waitText('主要页面：Page B')
     await js('[...document.querySelectorAll(\'tr\')].find(row => row.textContent.includes(\'example.test\')).querySelector(\'button\').click()')
     await waitText('https://example.test/a?lesson=1')

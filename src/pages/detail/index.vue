@@ -5,6 +5,7 @@ import type { AppData } from '@@/type/types'
 import { useAppDetail } from '@/hooks/useAppDetail'
 import { Time, formatDate } from '@/utils/timerEvent'
 import { useAppInfo } from '@/store/app'
+import AppSelect from '@/components/AppSelect.vue'
 
 const route = useRoute()
 const start = ref(formatDate(new Date()).slice(0, 10))
@@ -13,6 +14,7 @@ const query = ref('')
 const category = ref('all')
 const selectedApp = ref(String(route.query.app ?? ''))
 const categories = ref<{ id: number, name: string }[]>([])
+const categoryOptions = computed(() => [{ value: 'all', label: '全部分类' }, { value: '0', label: '未分类' }, ...categories.value.map(c => ({ value: String(c.id), label: c.name }))])
 const data = ref<AppData[]>([])
 const busy = ref(false)
 const error = ref('')
@@ -81,15 +83,9 @@ onMounted(load)
       </button>
     </form>
     <div class="toolbar">
-      <input v-model="query" placeholder="搜索应用或别名" aria-label="搜索应用或别名"><select v-model="category" aria-label="筛选分类">
-        <option value="all">
-          全部分类
-        </option><option value="0">
-          未分类
-        </option><option v-for="c in categories" :key="c.id" :value="String(c.id)">
-          {{ c.name }}
-        </option>
-      </select><button v-if="selectedApp" class="action-button" @click="selectedApp = ''">
+      <input v-model="query" placeholder="搜索应用或别名" aria-label="搜索应用或别名">
+      <AppSelect v-model="category" label="筛选分类" :options="categoryOptions" />
+      <button v-if="selectedApp" class="action-button" @click="selectedApp = ''">
         查看全部应用
       </button>
     </div>

@@ -105,7 +105,7 @@ function calcChartData(data: DailyLogModels[]) {
       :default-value="activeYear"
       @update:model-value="valueChange"
     >
-      <SelectTrigger>
+      <SelectTrigger aria-label="统计年份">
         <SelectValue placeholder="选择日期" />
       </SelectTrigger>
       <SelectContent>

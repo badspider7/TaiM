@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useSettings } from '@/store/settings'
 import { useAppInfo } from '@/store/app'
+import AppAutocomplete from '@/components/AppAutocomplete.vue'
 
 const settings = useSettings()
 const apps = useAppInfo()
@@ -30,13 +31,11 @@ function remove(name: string) {
     </p>
     <h2>忽略应用</h2>
     <form class="toolbar" @submit.prevent="add">
-      <input v-model="ignored" list="known-apps" placeholder="输入应用名称或完整路径" maxlength="260" aria-label="忽略应用"><button class="action-button" :disabled="settings.busy || !ignored.trim()">
+      <AppAutocomplete v-model="ignored" :options="apps.appInfoList.map(a => a.name)" :disabled="settings.busy" label="忽略应用" placeholder="输入应用名称或完整路径" maxlength="260" />
+      <button class="action-button" :disabled="settings.busy || !ignored.trim()">
         添加
       </button>
     </form>
-    <datalist id="known-apps">
-      <option v-for="a in apps.appInfoList" :key="a.id" :value="a.name" />
-    </datalist>
     <div v-for="name in settings.config.actions.ignoredApps" :key="name" class="option-row">
       <span class="break-all">{{ name }}</span><button class="action-button" :disabled="settings.busy" @click="remove(name)">
         移除

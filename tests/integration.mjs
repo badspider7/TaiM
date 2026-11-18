@@ -232,6 +232,8 @@ async function run() {
       await waitText('重启并安装')
       win.webContents.send('updater:state', { ...original, revision: 103 })
     })
+    const { testSelects } = await import('./ui-select.mjs')
+    await testSelects(test, { win, js, invoke, waitText, temporary })
     const { testWebsites } = await import('./websites.mjs')
     await testWebsites(test, { temporary, win, invoke, js, waitText })
     const exportPath = path.join(temporary, 'backup.json')
