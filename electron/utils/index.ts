@@ -1,35 +1,15 @@
-import type { BrowserWindow } from 'electron'
 import { powerMonitor } from 'electron'
-import platform from '../const/getPlatform'
-import TimerListener from './timeTracker'
-import { getWinIco } from './appIcon/win'
-import { cache } from './activeAppCache'
+import tracker from './timeTracker'
 
 export function startRecord() {
-  TimerListener.start()
+  tracker.start()
 }
-
-export async function getIcon(app): Promise<string> {
-  // 判断不同平台
-  if (platform.windows()) {
-    const icon = await getWinIco(app)
-    return icon
-  }
-}
-
 export function clearAllTimer() {
-  TimerListener.clearAll()
-  cache.stopSaveInterval()
+  tracker.clearAll()
 }
-
-export function isComputerSleep(win: BrowserWindow) {
-  powerMonitor.on('suspend', () => {
-    TimerListener.sleep()
-    console.log('系统即将进入休眠状态')
-  })
-
-  powerMonitor.on('resume', () => {
-    TimerListener.wake()
-    console.log('系统已从休眠状态恢复')
-  })
+export function isComputerSleep() {
+  powerMonitor.on('suspend', () => tracker.sleep())
+  powerMonitor.on('resume', () => tracker.wake())
+  powerMonitor.on('lock-screen', () => tracker.sleep())
+  powerMonitor.on('unlock-screen', () => tracker.wake())
 }

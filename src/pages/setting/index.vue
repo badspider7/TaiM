@@ -3,7 +3,7 @@ import TabBar from './TabBar.vue'
 </script>
 
 <template>
-  <div class="statistic-wrap">
+  <div class="statistic-wrap page-scroll">
     <div class="title font-middle text-lg">
       设置
     </div>

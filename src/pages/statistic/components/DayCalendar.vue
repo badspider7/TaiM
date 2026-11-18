@@ -63,7 +63,7 @@ async function getDataByTime(time: string) {
   const dailyData = await getUsageTimeApi.getPerHourTimeOneDay(time)
   currentAppInfo.value = await getSelectAppData(time)
   lastAppInfo.value = await getLastAppData(time)
-  appData.value = useAppDetail(dailyData)
+  appData.value = await useAppDetail(dailyData)
   calcChartData(dailyData)
 }
 

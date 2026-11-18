@@ -58,21 +58,13 @@ async function getCurrentMonthData(month: string) {
 }
 
 async function getLastMonthData(month: string) {
-  if (month === '1') {
-    return []
-  }
-  else {
-    const { start, end } = Time.getMonthDate(new Date().getFullYear(), Number(month) - 1)
-    return await getUsageTimeApi.getDataInRange(start, end)
-  }
+  const { start, end } = Time.getMonthDate(new Date().getFullYear(), Number(month) - 1)
+  return await getUsageTimeApi.getDataInRange(start, end)
 }
 
 // 拿到一个月有多少天
 function getMonthDays(month: string) {
-  const date = new Date()
-  date.setMonth(Number(month) - 1)
-  date.setFullYear(date.getFullYear())
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
+  return new Date(new Date().getFullYear(), Number(month), 0).getDate()
 }
 
 function calcChartData(xAxis: number[], data: DailyLogModels[]) {

@@ -15,7 +15,7 @@ export function getDayOptions(xAxisData: number[], yAxisData: number[], secondAr
       formatter(params: any) {
         const second = secondArr[params[0].dataIndex]
         return (
-        ` <span style="color:red;width:10px;height:10px;border-radius:50%;background-color:#e11d48;display:inline-block;margin-right:5px;vertical-align:middle"></span>` + `未分类：${Time.toString(second)}`
+        ` <span style="color:red;width:10px;height:10px;border-radius:50%;background-color:#e11d48;display:inline-block;margin-right:5px;vertical-align:middle"></span>` + `总计：${Time.toString(second)}`
         )
       },
     },
@@ -123,7 +123,7 @@ export function getWeekOptions(xAxisData: string[], yAxisData: string[], secondA
       formatter(params: any) {
         const second = secondArr[params[0].axisValue]
         return (
-        ` <span style="color:red;width:10px;height:10px;border-radius:50%;background-color:#e11d48;display:inline-block;margin-right:5px;vertical-align:middle"></span>` + `未分类：${Time.toString(second)}`
+        ` <span style="color:red;width:10px;height:10px;border-radius:50%;background-color:#e11d48;display:inline-block;margin-right:5px;vertical-align:middle"></span>` + `总计：${Time.toString(second)}`
         )
       },
     },
@@ -239,7 +239,7 @@ export function getMonthOptions(xAxisData: number[], yAxisData: string[], second
       formatter(params: any) {
         const second = secondArr[params[0].dataIndex]
         return (
-        ` <span style="color:red;width:10px;height:10px;border-radius:50%;background-color:#e11d48;display:inline-block;margin-right:5px;vertical-align:middle"></span>` + `未分类：${Time.toString(second)}`
+        ` <span style="color:red;width:10px;height:10px;border-radius:50%;background-color:#e11d48;display:inline-block;margin-right:5px;vertical-align:middle"></span>` + `总计：${Time.toString(second)}`
         )
       },
     },
@@ -361,7 +361,7 @@ export function getYearOptions(xAxisData: string[], yAxisData: string[], secondA
       formatter(params: any) {
         const second = secondArr[params[0].dataIndex]
         return (
-        ` <span style="color:red;width:10px;height:10px;border-radius:50%;background-color:#e11d48;display:inline-block;margin-right:5px;vertical-align:middle"></span>` + `未分类：${Time.toString(second)}`
+        ` <span style="color:red;width:10px;height:10px;border-radius:50%;background-color:#e11d48;display:inline-block;margin-right:5px;vertical-align:middle"></span>` + `总计：${Time.toString(second)}`
         )
       },
     },

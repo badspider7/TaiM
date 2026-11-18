@@ -10,7 +10,7 @@ export const useAppInfo = defineStore('appInfo', () => {
 
   async function getAppInfo() {
     appInfoList.value = await window.ipcRenderer.invoke('getAppInfo')
-    return appInfoList
+    return appInfoList.value
   }
   return { appInfoList, getAppInfo }
 })

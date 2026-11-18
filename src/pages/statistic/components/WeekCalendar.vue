@@ -34,11 +34,11 @@ onMounted(async () => {
 
 async function updateChartData(weekType: string) {
   if (weekType === 'week') {
-    currentWeekInfo.value = useAppDetail(await getThisWeekData())
+    currentWeekInfo.value = await useAppDetail(await getThisWeekData())
     lastWeekInfo.value = await getLastWeekData()
   }
   else {
-    currentWeekInfo.value = useAppDetail(await getLastWeekData())
+    currentWeekInfo.value = await useAppDetail(await getLastWeekData())
     lastWeekInfo.value = await getBeforeLastWeekData()
   }
   calcChartData(currentWeekInfo.value)

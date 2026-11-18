@@ -1,5 +1,6 @@
 <script setup lang='ts'>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import type { AppData } from '@@/type/types'
 import { Progress } from '@/components/ui/progress'
 import { Time } from '@/utils/timerEvent'
@@ -12,9 +13,13 @@ const props = defineProps({
     required: true,
   },
 })
+
+const router = useRouter()
+const iconErrors = ref(new Set<string>())
+
 // 最为频繁的，默认是前五个
 const frequentlyApp = computed(() => {
-  const tempAppInfo = props.appData
+  const tempAppInfo = [...props.appData]
   const mergeItems = tempAppInfo.reduce((acc, item) => {
     if (acc[item.id!]) {
       acc[item.id!].totalTime += item.totalTime
@@ -35,13 +40,13 @@ function formatTime(second: number) {
 
 // 计算宽度
 function getProgressWidth(second: number) {
-  const first = frequentlyApp.value[0].totalTime
+  const first = frequentlyApp.value[0]?.totalTime || 1
   const rate = `${Math.floor((second / first) * 100)}%`
   return rate
 }
 
-function viewDetail() {
-  console.log('查看详情')
+function viewDetail(id: number | undefined) {
+  void router.push({ path: '/detail', query: { app: String(id) } })
 }
 </script>
 
@@ -51,13 +56,14 @@ function viewDetail() {
       最为频繁
     </div>
     <div v-if="frequentlyApp.length > 0" class="app-list">
-      <div v-for="item in frequentlyApp" :key="item.id" class="app-info" @click="viewDetail">
+      <div v-for="item in frequentlyApp" :key="item.id" class="app-info" @click="viewDetail(item.id)">
         <div class="app-icon">
-          <img :src="item.iconFile" alt="" class="w-5 h-5">
+          <img v-if="item.iconFile && !iconErrors.has(item.iconFile)" :src="item.iconFile" alt="" class="w-5 h-5" @error="iconErrors.add(item.iconFile)">
+          <span v-else class="text-muted-foreground">{{ (item.alias || item.name).slice(0, 1) }}</span>
         </div>
         <div class="show-data">
           <div class="app-name text-gray-600">
-            {{ item.name }}
+            {{ item.alias || item.name }}
           </div>
           <Progress :model-value="100" class="progress " :style="{ width: getProgressWidth(item.totalTime) }" />
         </div>

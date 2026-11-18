@@ -26,3 +26,7 @@ release
 *.sw?
 *.db
 *.db-*
+
+# Generated test and compiler artifacts
+*.tsbuildinfo
+binding-probe.json

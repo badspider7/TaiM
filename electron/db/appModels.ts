@@ -34,7 +34,7 @@ function useDB(db: Database.Database): AppModelDB {
 `)
     },
     getAppModel(name) {
-      const select = db.prepare(`select * from AppModels where name = ?`).get(name)
+      const select = db.prepare<unknown[], AppModel>(`select * from AppModels where name = ?`).get(name)
       return select
     },
     insertAppModel(appQuery: AppModel) {
@@ -43,7 +43,7 @@ function useDB(db: Database.Database): AppModelDB {
     },
     updateAppModel(appQuery: AppModel) {
       const updateStmt = db.prepare(`update AppModels set name = ?, alias = ?, description = ? ,file = ?, categoryId = ?, iconFile = ?, totalTime = ? where id = ?`)
-      updateStmt.run(appQuery.name, appQuery.alias, appQuery.description, appQuery.file, appQuery.categoryId, appQuery.iconFile, appQuery.totalTime)
+      updateStmt.run(appQuery.name, appQuery.alias, appQuery.description, appQuery.file, appQuery.categoryId, appQuery.iconFile, appQuery.totalTime, appQuery.id)
     },
     updateTotalTime(name, totalTime) {
       db.prepare(`update AppModels set totalTime = ? where name = ?`).run(totalTime, name)
@@ -53,7 +53,7 @@ function useDB(db: Database.Database): AppModelDB {
       deleteStmt.run(id)
     },
     getAllAppModel() {
-      const select = db.prepare(`select * from AppModels`).all()
+      const select = db.prepare<unknown[], AppModel>(`select * from AppModels`).all()
       return select
     },
     clearAllData() {
@@ -61,7 +61,7 @@ function useDB(db: Database.Database): AppModelDB {
       deleteStmt.run()
     },
     getAppModelIdByName(name: string) {
-      const select = db.prepare(`select id from AppModels where name = ?`).get(name)
+      const select = db.prepare<unknown[], { id: number }>(`select id from AppModels where name = ?`).get(name)
       return select?.id
     },
   }

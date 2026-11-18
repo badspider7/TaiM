@@ -17,6 +17,7 @@ enum TabType {
 const activeTab = ref('day')
 const acitveCom = shallowRef(DayCalendar)
 const store = useActiveTab()
+store.setActiveTab('day')
 const comMap = {
   day: DayCalendar,
   week: WeekCalendar,
@@ -24,7 +25,10 @@ const comMap = {
   year: YearCalendar,
 }
 
-function tabChange(type: keyof typeof TabType) {
+function tabChange(input: string | number) {
+  const type = String(input) as keyof typeof TabType
+  if (!(type in comMap))
+    return
   activeTab.value = type
   store.setActiveTab(type)
   acitveCom.value = comMap[type]
@@ -32,7 +36,7 @@ function tabChange(type: keyof typeof TabType) {
 </script>
 
 <template>
-  <Tabs default-value="day" class="list-wrap">
+  <Tabs :model-value="activeTab" class="list-wrap" @update:model-value="tabChange">
     <TabsList>
       <TabsTrigger value="day" @click="tabChange('day')">
         按天

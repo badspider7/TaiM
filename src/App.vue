@@ -3,10 +3,12 @@ import { onMounted } from 'vue'
 import Header from '@/components/layout/Header.vue'
 import SideBar from '@/components/layout/SideBar.vue'
 import { useAppInfo } from '@/store/app'
+import { useSettings } from '@/store/settings'
 
 onMounted(() => {
   const appInfo = useAppInfo()
   appInfo.getAppInfo()
+  useSettings().load()
 })
 </script>
 

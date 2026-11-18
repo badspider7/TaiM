@@ -2,21 +2,25 @@ import path from 'node:path'
 import type { BrowserWindow } from 'electron'
 import { Menu, Tray, app, nativeImage } from 'electron'
 
+let tray: Tray | undefined
+
 export function setupTray(win: BrowserWindow): void {
-  const tray = new Tray(nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.ico')))
+  tray = new Tray(nativeImage.createFromPath(path.join(process.env.VITE_PUBLIC, 'logo.ico')))
 
   const contextMenu = Menu.buildFromTemplate([
     {
       label: '   显示   ',
       click: () => {
-        win?.minimize()
+        if (win.isMinimized())
+          win.restore()
         win?.show()
+        win.focus()
       },
     },
     {
       label: '   退出   ',
       click: () => {
-        app.exit()
+        app.quit()
       },
     },
   ])

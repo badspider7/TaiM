@@ -3,8 +3,8 @@ import { getDB } from './better-sqlite3'
 import type { DBConfig } from './index'
 
 export interface TableVersionDB extends DBConfig {
-  // eslint-disable-next-line ts/no-unsafe-function-type
-  initTableIfNotExists: Function
+
+  initTableIfNotExists: () => void
   initTableVersionRecord: (table: string, version: number) => Database.RunResult
   updateTableVersionRecord: (table: string, version: number) => Database.RunResult
   getTableVersion: (table: string) => number

@@ -7,11 +7,11 @@ export interface DailyLogDb extends DBConfig {
   getAllData: () => DailyLogModels[]
   getAllYearData: (year: string) => DailyLogModels[]
   getSingleData: (time: string, appModelId: number) => DailyLogModels | undefined
-  getDataFromHoursDB: (date: string, appModelId: number) => void
+  getDataFromHoursDB: (date: string, appModelId: number) => { dayTime: number }[]
   getDataByTime: (time: string) => DailyLogModels[]
   getDataByTimeRange: (timeStart: string, timeEnd: string) => DailyLogModels[]
   insertData: (dataQuery: DailyLogModels) => void
-  updateTime: (time: string, id: number) => void
+  updateTime: (time: number, id: number) => void
   deleteData: (time: string, appModelId: number) => void
   clearAll: () => void
 }
@@ -32,19 +32,19 @@ function useDB(db: Database.Database): DailyLogDb {
 `)
     },
     getAllData() {
-      const select = db.prepare(`select * from DailyLogModels`).all()
+      const select = db.prepare<unknown[], DailyLogModels>(`select * from DailyLogModels`).all()
       return select
     },
     getAllYearData(year) {
-      const select = db.prepare(`select * from DailyLogModels where strftime('%Y', dayTime) = ?`).all(year)
+      const select = db.prepare<unknown[], DailyLogModels>(`select * from DailyLogModels where strftime('%Y', dayTime) = ?`).all(year)
       return select
     },
     getSingleData(time, appModelID) {
-      const select = db.prepare(`select * from DailyLogModels where dayTime = ? and appModelId = ?`).get(time, appModelID)
+      const select = db.prepare<unknown[], DailyLogModels>(`select * from DailyLogModels where dayTime = ? and appModelId = ?`).get(time, appModelID)
       return select
     },
     getDataFromHoursDB(date, appModelId) {
-      const sqltmt = db.prepare(`
+      const sqltmt = db.prepare<unknown[], { dayTime: number }>(`
       SELECT  
           SUM(time) AS dayTime  
       FROM  
@@ -57,11 +57,11 @@ function useDB(db: Database.Database): DailyLogDb {
       return select
     },
     getDataByTime(time) {
-      const select = db.prepare(`select * from DailyLogModels where dayTime = ?`).all(time)
+      const select = db.prepare<unknown[], DailyLogModels>(`select * from DailyLogModels where dayTime = ?`).all(time)
       return select
     },
     getDataByTimeRange(timeStart, timeEnd) {
-      const select = db.prepare(`select * from DailyLogModels where dayTime >= ? and dayTime <= ?`).all(timeStart, timeEnd)
+      const select = db.prepare<unknown[], DailyLogModels>(`select * from DailyLogModels where dayTime >= ? and dayTime <= ?`).all(timeStart, timeEnd)
       return select
     },
     insertData(dataQuery) {
@@ -73,12 +73,11 @@ function useDB(db: Database.Database): DailyLogDb {
       updateStmt.run(totalTime, id)
     },
     deleteData(time, appModelID) {
-      const deleteStmt = db.prepare(`delete from DailyLogModels where dataTime = ? and appModelId = ?`)
+      const deleteStmt = db.prepare(`delete from DailyLogModels where dayTime = ? and appModelId = ?`)
       deleteStmt.run(time, appModelID)
     },
     clearAll() {
-      const deleteStmt = db.prepare(`delete from DailyLogModels`).run()
-      deleteStmt.run()
+      db.prepare(`delete from DailyLogModels`).run()
     },
   }
 }

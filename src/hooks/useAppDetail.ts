@@ -1,52 +1,12 @@
-import type { AppData, AppModel, DailyLogModels, HoursLogModels } from '@@/type/types'
+import type { AppData, DailyLogModels, HoursLogModels } from '@@/type/types'
 import { useAppInfo } from '@/store/app'
 
-const appStore = useAppInfo()
-const appInfo: AppModel[] = appStore.appInfoList
-export function useAppDetail(TimeList: Array<DailyLogModels | HoursLogModels>) {
-  // 创建一个映射，以快速查找应用信息
-  const appInfoMap = appInfo.reduce((map: Record<string | number, AppModel>, app) => {
-    map[app.id!] = app
-    return map
-  }, {})
-
-  console.log('appInfo', appInfo)
-  console.log('appInfoMap===', appInfoMap)
-
-  const appDataList: Array<AppData> = []
-  TimeList.forEach((item) => {
-    let appModel = appInfoMap[item.appModelId]
-    if (!appModel) {
-      // 如果当前appModelId不在appInfoMap中，则尝试从appStore中获取
-      const updatedAppInfo: any = appStore.getAppInfo()
-      console.log('updatedAppInfo===', updatedAppInfo)
-      // TODO: 这里会出现bug
-      // 更新appInfoMap
-      const updatedAppInfoMap = updatedAppInfo.reduce((map: Record<number, AppModel>, app: AppModel) => {
-        map[app.id as number] = app
-        return map
-      }, {})
-      // 再次尝试获取
-      appModel = updatedAppInfoMap[item.appModelId]
-    }
-
-    // 判断是DailyLogModels 还是 HoursLogModels
-    let date = null
-
-    if (Object.hasOwn(item, 'dayTime')) {
-      date = (item as DailyLogModels).dayTime
-    }
-    else {
-      date = (item as HoursLogModels).hoursTime
-    }
-    if (appModel) {
-      const tempObj: AppData = { ...appModel, totalTime: item.time, date }
-      appDataList.push(tempObj)
-    }
-    else {
-      console.warn(`No app found for appModelId: ${item.appModelId}`)
-    }
+export async function useAppDetail(timeList: Array<DailyLogModels | HoursLogModels>): Promise<AppData[]> {
+  const store = useAppInfo()
+  await store.getAppInfo()
+  const models = new Map(store.appInfoList.map(app => [app.id, app]))
+  return timeList.flatMap((item) => {
+    const model = models.get(item.appModelId)
+    return model ? [{ ...model, totalTime: item.time, date: 'dayTime' in item ? item.dayTime : item.hoursTime }] : []
   })
-
-  return appDataList
 }

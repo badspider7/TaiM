@@ -1,65 +1,35 @@
 import { executeMethodsInOrder } from '../handle/handleFocusWin'
+import logger from '../logger'
+import type { UsageRecord } from './usage'
 
-interface CacheItem<T> {
-  value: T
-}
-
-class ExpiringCache<K, T> {
-  private cache: Map<K, CacheItem<T>> = new Map()
-  private readonly saveInterval: number // 定时保存的时间间隔，以毫秒为单位
-  private saveTimerId: NodeJS.Timeout | null = null // 定时器的ID，用于取消定时器
-
-  constructor(saveInterval: number) {
-    this.saveInterval = saveInterval
-    // 立即启动定时器以开始监控
-    this.startSaveInterval()
+class UsageCache {
+  private records = new Map<string, UsageRecord>()
+  private timer: NodeJS.Timeout | undefined
+  add(record: UsageRecord) {
+    const key = JSON.stringify([record.name, record.startTime])
+    const previous = this.records.get(key)
+    this.records.set(key, { ...record, duration: (previous?.duration ?? 0) + record.duration })
   }
 
-  set(key: K, value: T): void {
-    this.cache.set(key, { value })
-  }
-
-  get(key: K): T | undefined {
-    const item = this.cache.get(key)
-    return item ? item.value : undefined
-  }
-
-  delete(key: K): void {
-    this.cache.delete(key)
-  }
-
-  // 定时保存数据到数据库的方法
-  private saveDataToDatabase = () => {
-    this.cache.forEach((item, key) => {
-      // 统计 totalTime
-      executeMethodsInOrder(item.value)
-    })
-    this.clearCache()
-  }
-
-  // 启动定时保存间隔
-  startSaveInterval = () => {
-    if (this.saveTimerId !== null) {
-      clearInterval(this.saveTimerId)
-      this.clearCache()
-    }
-    this.saveTimerId = setInterval(this.saveDataToDatabase, this.saveInterval)
-  }
-
-  // 停止定时保存间隔
-  stopSaveInterval = () => {
-    if (this.saveTimerId !== null) {
-      clearInterval(this.saveTimerId)
-      this.saveTimerId = null
-      this.saveDataToDatabase()
-      this.clearCache()
+  flush = (strict = false) => {
+    for (const [key, record] of this.records) {
+      try {
+        executeMethodsInOrder(record)
+        this.records.delete(key)
+      }
+      catch (error) { logger.error('保存统计失败，将在下次重试', error) }
     }
   }
 
-  // 清理整个缓存
-  clearCache = () => {
-    this.cache.clear()
+  startSaveInterval() {
+    if (!this.timer)
+      this.timer = setInterval(this.flush, 15000)
+  }
+
+  stopSaveInterval() {
+    clearInterval(this.timer)
+    this.timer = undefined
+    this.flush()
   }
 }
-
-export const cache = new ExpiringCache(1000 * 60) // 每1分钟把内存缓存数据存入到数据库
+export const cache = new UsageCache()

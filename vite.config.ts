@@ -1,7 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { createRequire } from 'node:module'
-import { type Plugin, defineConfig, normalizePath } from 'vite'
+import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import electron from 'vite-plugin-electron/simple'
 
@@ -9,8 +8,6 @@ import tailwind from 'tailwindcss'
 import autoprefixer from 'autoprefixer'
 import svgLoader from 'vite-svg-loader'
 import pkg from './package.json'
-
-const require = createRequire(import.meta.url)
 
 // https://vitejs.dev/config/
 export default defineConfig(({ command }) => {
@@ -20,6 +17,7 @@ export default defineConfig(({ command }) => {
   const sourcemap = isServe || !!process.env.VSCODE_DEBUG
 
   return {
+    base: './',
     css: {
       postcss: {
         plugins: [tailwind(), autoprefixer()],
@@ -77,6 +75,7 @@ export default defineConfig(({ command }) => {
               minify: isBuild,
               outDir: 'dist-electron/preload',
               rollupOptions: {
+                output: { format: 'cjs', entryFileNames: '[name].cjs' },
                 external: Object.keys(
                   'dependencies' in pkg ? pkg.dependencies : {},
                 ),
@@ -84,16 +83,11 @@ export default defineConfig(({ command }) => {
             },
           },
         },
-        // Ployfill the Electron and Node.js API for Renderer process.
-        // If you want use Node.js in Renderer process, the `nodeIntegration` needs to be enabled in the Main process.
-        // See 👉 https://github.com/electron-vite/vite-plugin-electron-renderer
-        renderer: {},
       }),
       svgLoader(({
         svgoConfig: {
         },
       })),
-      bindingSqlite3(),
     ],
     server: process.env.VSCODE_DEBUG && (() => {
       const url = new URL(pkg.debug.env.VITE_DEV_SERVER_URL)
@@ -105,50 +99,3 @@ export default defineConfig(({ command }) => {
     clearScreen: false,
   }
 })
-
-// https://github.com/WiseLibs/better-sqlite3/blob/v8.5.2/lib/database.js#L36
-// https://github.com/WiseLibs/better-sqlite3/blob/v8.5.2/lib/database.js#L50
-function bindingSqlite3(
-  options: {
-    output?: string
-    better_sqlite3_node?: string
-    command?: string
-  } = {},
-): Plugin {
-  const TAG = '[vite-plugin-binding-sqlite3]'
-  options.output ??= 'dist-native'
-  options.better_sqlite3_node ??= 'better_sqlite3.node'
-  options.command ??= 'build'
-
-  return {
-    name: 'vite-plugin-binding-sqlite3',
-    config(config) {
-      // https://github.com/vitejs/vite/blob/v4.4.9/packages/vite/src/node/config.ts#L496-L499
-      const resolvedRoot = normalizePath(config.root ? path.resolve(config.root) : process.cwd())
-      const output = path.resolve(resolvedRoot, options.output as string)
-      const better_sqlite3 = require.resolve('better-sqlite3')
-      const better_sqlite3_root = path.join(
-        better_sqlite3.slice(0, better_sqlite3.lastIndexOf('node_modules')),
-        'node_modules/better-sqlite3',
-      )
-      const better_sqlite3_node = path.join(
-        better_sqlite3_root,
-        'build/Release',
-        options.better_sqlite3_node as string,
-      )
-      const better_sqlite3_copy = path.join(output, options.better_sqlite3_node as string)
-      if (!fs.existsSync(better_sqlite3_node)) {
-        throw new Error(`${TAG} Can not found "${better_sqlite3_node}".`)
-      }
-      if (!fs.existsSync(output)) {
-        fs.mkdirSync(output, { recursive: true })
-      }
-      fs.copyFileSync(better_sqlite3_node, better_sqlite3_copy)
-      /** `dist-native/better_sqlite3.node` */
-      const BETTER_SQLITE3_BINDING = better_sqlite3_copy.replace(`${resolvedRoot}/`, '')
-      fs.writeFileSync(path.join(resolvedRoot, '.env'), `VITE_BETTER_SQLITE3_BINDING=${BETTER_SQLITE3_BINDING}`)
-
-      console.log(TAG, `binding to ${BETTER_SQLITE3_BINDING}`)
-    },
-  }
-}

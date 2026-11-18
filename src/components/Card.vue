@@ -68,9 +68,9 @@ const isPositive = computed(() => {
         // width: 12.5rem;
         flex: 1;
         height: 4.375rem;
-        background-color: #fff;
+        background-color: hsl(var(--card));
         border-radius: .5rem;
         padding: .625rem;
-        border: .0625rem solid #ccc;
+        border: .0625rem solid hsl(var(--border));
     }
 </style>

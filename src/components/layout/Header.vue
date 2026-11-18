@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import {
   CopySelect20Regular,
   Dismiss16Regular,
@@ -9,22 +9,19 @@ import {
 
 const isMaxmize = ref(false)
 
-function isWinMaxmize() {
-  window.ipcRenderer.on('window.maximize', (event, value) => {
-    isMaxmize.value = value
-  })
+function onMaximize(_event: unknown, value: boolean) {
+  isMaxmize.value = value
 }
+onMounted(() => window.ipcRenderer.on('window.maximize', onMaximize))
+onUnmounted(() => window.ipcRenderer.off('window.maximize', onMaximize))
 function minimizeHandler() {
   window.ipcRenderer.invoke('titleBarControl:minimize')
-  isWinMaxmize()
 }
 async function maxmizeHandler() {
   isMaxmize.value = await window.ipcRenderer.invoke('titleBarControl:maximizeOrUnmaximize')
-  isWinMaxmize()
 }
 function closeHandler() {
   window.ipcRenderer.invoke('titleBarControl:close', 'hide')
-  isWinMaxmize()
 }
 </script>
 

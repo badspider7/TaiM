@@ -1,15 +1,14 @@
-import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import os from 'node:os'
+import fs from 'node:fs'
 import { BrowserWindow, app, ipcMain, shell } from 'electron'
 import { setupHandle } from '../handle'
 import { clearAllTimer, isComputerSleep, startRecord } from '../utils'
 import logger from '../logger'
 import { initDb } from '../db'
+import { getConfig } from '../config'
 
-const VUEJS3_DEVTOOLS = 'nhdogjmejiglipccpnnnanhbledajbpd'
-const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 process.env.APP_ROOT = path.join(__dirname, '../..')
@@ -32,6 +31,7 @@ if (process.platform === 'win32')
   app.setAppUserModelId(app.getName())
 
 let win: BrowserWindow | null = null
+let quitting = false
 
 if (!app.requestSingleInstanceLock()) {
   app.quit()
@@ -39,7 +39,10 @@ if (!app.requestSingleInstanceLock()) {
 }
 else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
+    if (win?.isMinimized())
+      win.restore()
     win?.show()
+    win?.focus()
   })
 }
 
@@ -52,18 +55,28 @@ process
     throw err
   })
 
-const preload = path.join(__dirname, '../preload/index.mjs')
+const preload = path.join(__dirname, '../preload/index.cjs')
 const indexHtml = path.join(RENDERER_DIST, 'index.html')
 
 export async function createWindow() {
+  let size = { width: 1000, height: 720 }
+  if (getConfig().common.keepWindowSize) {
+    try {
+      const saved = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), 'window.json'), 'utf8'))
+      if (Number.isFinite(saved.width) && Number.isFinite(saved.height))
+        size = { width: Math.max(800, Math.min(2560, saved.width)), height: Math.max(600, Math.min(1440, saved.height)) }
+    }
+    catch { /* First launch has no saved window size. */ }
+  }
   win = new BrowserWindow({
+    ...size,
     title: 'TaiM',
-    icon: path.join(process.env.VITE_PUBLIC, '../../public/favicon.svg'),
+    icon: path.join(process.env.VITE_PUBLIC, 'logo.ico'),
     webPreferences: {
       preload,
-      nodeIntegration: true,
+      nodeIntegration: false,
+      sandbox: true,
       contextIsolation: true,
-      webSecurity: false,
     },
     titleBarStyle: 'hidden',
     show: false,
@@ -84,18 +97,23 @@ export async function createWindow() {
     })
   }
 
-  win.once('ready-to-show', () => {
-    win?.show()
-    win.setMinimumSize(800, 600)
+  win.on('close', (event) => {
+    if (!quitting) {
+      event.preventDefault()
+      win?.hide()
+    }
   })
 
-  win.webContents.on('did-finish-load', () => {
-    win.on('resized', () => {
-      win?.webContents.send('refresh-chart', '')
-    })
-    // 开始统计应用时间
-    startRecord()
-    isComputerSleep(win)
+  win.once('ready-to-show', () => {
+    if (!process.argv.includes('--hidden'))
+      win?.show()
+    win?.setMinimumSize(800, 600)
+  })
+
+  win.on('resized', () => {
+    win?.webContents.send('refresh-chart', '')
+    if (getConfig().common.keepWindowSize && !win?.isMaximized())
+      fs.writeFileSync(path.join(app.getPath('userData'), 'window.json'), JSON.stringify(win?.getBounds()))
   })
 
   // Make all links open with the browser, not with the application
@@ -104,30 +122,35 @@ export async function createWindow() {
       shell.openExternal(url)
     return { action: 'deny' }
   })
+  win.webContents.on('will-navigate', (event, url) => {
+    if (url !== win?.webContents.getURL())
+      event.preventDefault()
+  })
   // win.webContents.on('will-navigate', (event, url) => { }) #344
 }
 
 app.on('window-all-closed', () => {
-  console.log('====windows all close ===')
   clearAllTimer()
   win = null
   if (process.platform !== 'darwin')
     app.quit()
+})
+app.on('before-quit', () => {
+  quitting = true
+  clearAllTimer()
 })
 
 // 防止页面被冻结
 app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion')
 
 ipcMain.on('open-url', (e, args) => {
-  void shell.openExternal(args)
+  if (typeof args === 'string' && /^https:\/\//.test(args))
+    void shell.openExternal(args)
 })
 app.whenReady().then(async () => {
   initDb()
-  void createWindow()
-  setupHandle(win)
-  // if (process.env.VITE_DEV_SERVER_URL) {
-  //   installExtension(VUEJS3_DEVTOOLS, { loadExtensionOptions: { allowFileAccess: true } })
-  //     .then(name => logger.debug(`Added Extension:  ${name}`))
-  //     .catch(err => logger.debug('An error occurred: ', err))
-  // }
+  await createWindow()
+  setupHandle(win!)
+  startRecord()
+  isComputerSleep()
 })

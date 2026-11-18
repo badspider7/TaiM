@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import type { AppData, DailyLogModels } from '@@/type/types'
-import * as echarts from 'echarts'
-import { computed, onMounted, ref, shallowRef } from 'vue'
+import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
+import * as echarts from '@/lib/charts'
 import CardGroup from '@/components/CardGroup.vue'
 import AppList from '@/pages/overview/FrequentApp.vue'
 import AppDetail from '@/components/AppDetail.vue'
@@ -68,6 +68,7 @@ function updateChartGraphic(chart: any, x: number, y: number, width: number, hei
       },
       z: 10,
     },
+
   })
 }
 
@@ -151,12 +152,14 @@ async function getAppDetail(index: number) {
           acc[item.id!].totalTime += item.totalTime
         }
         else {
-          acc[item.id!] = { ...item }
+          acc[item.id!] = { ...item,
+          }
         }
         return acc
       }, {})
       return Object.values(tempAppInfo)
     },
+
   }
   const strategy = strategies[store.activeTab]
   if (strategy) {
@@ -178,17 +181,21 @@ const displayTime = computed(() => {
     [ACTIVE_TAB_TYPE.YEAR]: () => {
       return selectedMonth.value
     },
+
   }
 
   const strategy = strategies[store.activeTab]
   return strategy()
 })
 
+const resize = () => chart.value?.resize()
 function refreshChart() {
-  window.ipcRenderer.on('refresh-chart', (_event, value) => {
-    chart.value && chart.value.resize()
-  })
+  window.ipcRenderer.on('refresh-chart', resize)
 }
+onUnmounted(() => {
+  window.ipcRenderer.off('refresh-chart', resize)
+  chart.value?.dispose()
+})
 
 defineExpose({
   initChart,

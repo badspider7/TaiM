@@ -1,2 +1,29 @@
 @use "./common.scss";
 @use "./variables.scss";
+
+body { background: hsl(var(--background)); color: hsl(var(--foreground)); }
+.page-scroll { overflow-y: auto; padding-bottom: 24px; }
+.settings-panel { max-width: 800px; padding-bottom: 24px; }
+.settings-panel h2 { font-weight: 600; }
+.option-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid hsl(var(--border)); }
+.toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+input:not([type=checkbox]), select { padding: 7px 10px; border: 1px solid hsl(var(--border)); border-radius: 6px; background: hsl(var(--background)); color: hsl(var(--foreground)); max-width: 100%; }
+input[type=number] { width: 90px; }
+input[type=checkbox] { accent-color: hsl(var(--primary)); width: 18px; height: 18px; }
+.action-button { border: 1px solid hsl(var(--border)); border-radius: 6px; padding: 7px 12px; font-size: 14px; }
+.action-button:hover { background: hsl(var(--accent)); }
+button:disabled { opacity: .5; cursor: not-allowed; }
+button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
+.error-message { color: #e11d48; font-size: 14px; margin-top: 12px; }
+.data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+.data-table th, .data-table td { padding: 12px 8px; border-bottom: 1px solid hsl(var(--border)); }
+.data-table tbody tr:hover { background: hsl(var(--accent)); }
+.dark { --font-color: #ededed; color-scheme: dark; }
+.dark .header-wrapper, .dark .side-bar, .dark .app-icon { background-color: hsl(var(--card)); }
+.dark .text-gray-600 { color: hsl(var(--foreground)); }
+.dark .display-content, .dark .chart-element { border-color: hsl(var(--border)); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+
+.dark .sidebar-icon path { fill: currentColor; }
+
+input, textarea { user-select: text; }

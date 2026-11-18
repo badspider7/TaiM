@@ -22,14 +22,17 @@ const comMap = {
 const activeTab = ref('common')
 const acitveCom = shallowRef(Common)
 
-function tabChange(value: keyof typeof TabType) {
+function tabChange(input: string | number) {
+  const value = String(input) as keyof typeof TabType
+  if (!(value in comMap))
+    return
   activeTab.value = value
   acitveCom.value = comMap[value]
 }
 </script>
 
 <template>
-  <Tabs default-value="common">
+  <Tabs :model-value="activeTab" @update:model-value="tabChange">
     <TabsList>
       <TabsTrigger value="common" @click="tabChange('common')">
         通用

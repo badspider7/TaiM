@@ -7,8 +7,8 @@ export function formatDate(date: Date) {
 
 export class Time {
   static toHoursString(seconds: number) {
-    const hours = seconds / 3600
-    if (hours > 0.1) {
+    const hours = (Number.isFinite(seconds) ? Math.max(0, seconds) : 0) / 3600
+    if (hours > 0) {
       return hours.toFixed(2)
     }
     else {
@@ -17,6 +17,7 @@ export class Time {
   }
 
   static toString(seconds: number) {
+    seconds = Math.max(0, Math.round(Number.isFinite(seconds) ? seconds : 0))
     let minutes = Math.floor(seconds / 60)
     const remainingSeconds = seconds % 60
 

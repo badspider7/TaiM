@@ -1,14 +1,12 @@
 const defaultConfig: IConfig = {
   version: 1,
   common: {
-    autoLaunch: true,
+    autoLaunch: false,
     keepWindowSize: false,
     lang: 'zh-CN',
     theme: 'light',
   },
-  actions: {
-
-  },
+  actions: { idleMinutes: 5, ignoredApps: [] },
   data: {
 
   },
@@ -23,7 +21,8 @@ export interface IConfig {
     theme: string
   }
   actions: {
-
+    idleMinutes: number
+    ignoredApps: string[]
   }
   data: {
 

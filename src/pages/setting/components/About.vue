@@ -4,20 +4,15 @@ import { Loader2, MonitorUp, Terminal } from 'lucide-vue-next'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 
-const isChecking = ref(false)
-
+const version = ref('')
+window.ipcRenderer.invoke('app:version').then((value) => {
+  version.value = value
+})
 function goto(url: string) {
-  // TODO: debounce
-  setTimeout(() => {
-    window.open(url)
-  }, 200)
+  window.ipcRenderer.send('open-url', url)
 }
-
 function checkUpdate() {
-  isChecking.value = true
-  setTimeout(() => {
-    isChecking.value = false
-  }, 1000)
+  goto('https://github.com/badspider7/TaiM/releases')
 }
 </script>
 
@@ -39,11 +34,9 @@ function checkUpdate() {
       </Alert>
     </div>
     <div class="version">
-      <span>版本号:</span><span>0.0.1-alpha</span>
-      <Button variant="outline" class="ml-4 update-btn" :disabled="isChecking" @click="checkUpdate">
-        <Loader2 v-if="isChecking" class="w-4 h-4 mr-2 animate-spin" />
-        <MonitorUp v-else class="w-4 h-4" />
-        <span class="ml-2">{{ isChecking ? '正在检查更新...' : '检查更新' }}</span>
+      <span>版本号:</span><span>{{ version }}</span>
+      <Button variant="outline" class="ml-4 update-btn" @click="checkUpdate">
+        查看发布版本
       </Button>
     </div>
     <div class="project-link">
@@ -54,9 +47,7 @@ function checkUpdate() {
     </div>
     <div class="connect-me">
       联系我：
-      <Button variant="link" class="h-8">
-        1742969779@qq.com
-      </Button>
+      <span>1742969779@qq.com</span>
     </div>
     <div class="thanks">
       特别鸣谢:

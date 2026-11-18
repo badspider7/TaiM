@@ -3,6 +3,8 @@
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "YourAppID",
   "asar": true,
+  "npmRebuild": false,
+  "asarUnpack": ["dist-native/**", "node_modules/get-windows/**"],
   "productName": "TaiM",
   // 更新服务器信息
   // "publish": [

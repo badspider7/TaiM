@@ -1,57 +1,25 @@
-const path = require('node:path')
-const child = require('node:child_process')
+import { createRequire } from 'node:module'
+import { spawnSync } from 'node:child_process'
+import fs from 'node:fs'
+import path from 'node:path'
 
-function execute(cmd, callback, cwd = process.cwd()) {
-  console.log('Rebuilding better-sqlite3 for Electron...')
-  const items = cmd
-  const exe = items.shift()
-  const processor = child.spawn(exe, items, { cwd })
-  const collect = () => {
-    let str = ''
-    const print = () => {
-      const lines = str.split(/[\n|\r]/)
-      str = lines.pop()
-      let contents = lines.join('\r\n')
-      if (str === '') {
-        // 如果本来内容就是完整断句的，这里进行修正，表示结尾是正常断句的
-        contents += '\r\n'
-      }
-      callback(contents)
-    }
-    return (data) => {
-      str += data.toString()
-      print()
-    }
-  }
-  if (typeof callback === 'function') {
-    processor.stdout.on('data', collect())
-    processor.stderr.on('data', collect())
-  }
-  processor.on('exit', (code) => {
-    if (code === 0) {
-      console.log('Rebuild better-sqlite3 success.')
-    }
-    process.exit(code)
-  })
-}
-
-// If you prefer electron-rebuild:
-// 👉 https://github.com/WiseLibs/better-sqlite3/blob/v8.5.2/docs/troubleshooting.md#electron
-// 👉 https://stackoverflow.com/questions/46384591/node-was-compiled-against-a-different-node-js-version-using-node-module-versio/52796884#52796884
-
-const better_sqlite3 = require.resolve('better-sqlite3')
-const better_sqlite3_root = path.posix.join(
-  better_sqlite3.slice(0, better_sqlite3.lastIndexOf('node_modules')),
-  'node_modules/better-sqlite3',
-)
-
-const cmd = [
-  'win32' ? 'npm.cmd' : 'npm',
-  'run',
-  'build-release',
-  `--target=${process.versions.electron}`,
-  // https://github.com/electron/electron/blob/v26.1.0/docs/tutorial/using-native-node-modules.md#manually-building-for-electron
-  '--dist-url=https://electronjs.org/headers',
-]
-
-execute(cmd, contents => console.log(contents), better_sqlite3_root)
+const require = createRequire(import.meta.url)
+const { rebuild } = require('@electron/rebuild')
+// SQLite uses Electron's ABI; get-windows ships a portable Node-API binary.
+await rebuild({
+  buildPath: process.cwd(),
+  electronVersion: require('electron/package.json').version,
+  onlyModules: ['better-sqlite3'],
+})
+const windowsRoot = path.dirname(require.resolve('get-windows'))
+const installer = require.resolve('@mapbox/node-pre-gyp/bin/node-pre-gyp')
+const result = spawnSync(process.execPath, [installer, 'install', '--fallback-to-build'], { cwd: windowsRoot, stdio: 'inherit' })
+if (result.status !== 0)
+  process.exit(result.status ?? 1)
+const root = path.dirname(require.resolve('better-sqlite3/package.json'))
+const binding = path.join(root, 'build', 'Release', 'better_sqlite3.node')
+if (!fs.existsSync(binding))
+  throw new Error('SQLite native binding was not built')
+fs.mkdirSync('dist-native', { recursive: true })
+fs.copyFileSync(binding, 'dist-native/better_sqlite3.node')
+console.log('Electron native bindings prepared.')

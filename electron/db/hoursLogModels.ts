@@ -4,13 +4,13 @@ import { getDB } from './better-sqlite3'
 import type { DBConfig } from './index'
 
 export interface HoursLogModelDB extends DBConfig {
-  getData: (time: string, appModelID: number) => HoursLogModels
+  getData: (time: string, appModelID: number) => HoursLogModels | undefined
   getHourData: (hours: string) => HoursLogModels[]
   getDailyByDate: (date: string) => HoursLogModels[]
   insertData: (data: HoursLogModels) => void
   updateData: (totalTime: number, id: number) => void
   deleteDataByHour: (time: string, appModelID: number) => void
-  getAllData: () => Promise<HoursLogModels[]>
+  getAllData: () => HoursLogModels[]
   clearAllData: () => void
 
 }
@@ -31,15 +31,15 @@ function useDB(db: Database.Database): HoursLogModelDB {
 `)
     },
     getData(time, appModelID) {
-      const select = db.prepare(`select * from HoursLogModels where hoursTime = ? and appModelId = ?`).get(time, appModelID)
+      const select = db.prepare<unknown[], HoursLogModels>(`select * from HoursLogModels where hoursTime = ? and appModelId = ?`).get(time, appModelID)
       return select
     },
     getHourData(hours) {
-      const select = db.prepare(`select * from HoursLogModels where hoursTime = ?`).all(hours)
+      const select = db.prepare<unknown[], HoursLogModels>(`select * from HoursLogModels where hoursTime = ?`).all(hours)
       return select
     },
     getDailyByDate(date) {
-      const select = db.prepare(`select * from HoursLogModels where strftime('%Y-%m-%d', hoursTime) = ?`).all(date)
+      const select = db.prepare<unknown[], HoursLogModels>(`select * from HoursLogModels where strftime('%Y-%m-%d', hoursTime) = ?`).all(date)
       return select
     },
     insertData(dataQuery) {
@@ -55,12 +55,11 @@ function useDB(db: Database.Database): HoursLogModelDB {
       deleteStmt.run(time, appModelID)
     },
     getAllData() {
-      const select = db.prepare(`select * from HoursLogModels`).all()
+      const select = db.prepare<unknown[], HoursLogModels>(`select * from HoursLogModels`).all()
       return select
     },
     clearAllData() {
-      const deleteStmt = db.prepare(`delete from HoursLogModels`).run()
-      deleteStmt.run()
+      db.prepare(`delete from HoursLogModels`).run()
     },
   }
 }

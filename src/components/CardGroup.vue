@@ -1,73 +1,27 @@
-<script setup lang='ts'>
-import { computed, ref, watch } from 'vue'
+<script setup lang="ts">
+import { computed } from 'vue'
 import { AccessTime20Regular, ArrowTrendingLines20Regular, StoreMicrosoft16Regular } from '@vicons/fluent'
 import type { AppData, DailyLogModels } from '@@/type/types'
 import Card from '@/components/Card.vue'
 import { Time } from '@/utils/timerEvent'
 
-const props = defineProps(['currentAppInfo', 'lastAppInfo'])
-
-function formatTime(second: number) {
-  return Time.toHoursString(second)
+const props = defineProps<{ currentAppInfo: AppData[], lastAppInfo: DailyLogModels[] }>()
+const currentTotalTime = computed(() => props.currentAppInfo.reduce((s, a) => s + a.totalTime, 0))
+const lastTotalTime = computed(() => props.lastAppInfo.reduce((s, a) => s + a.time, 0))
+const currentAppCount = computed(() => new Set(props.currentAppInfo.map(a => a.id)).size)
+const AppCountDelta = computed(() => currentAppCount.value - new Set(props.lastAppInfo.map(a => a.appModelId)).size)
+const mostTimeUsageApp = computed(() => {
+  const totals = new Map<number, AppData>()
+  for (const a of props.currentAppInfo) {
+    totals.set(a.id!, { ...a, totalTime: (totals.get(a.id!)?.totalTime ?? 0) + a.totalTime,
+    })
+  }
+  return [...totals.values()].sort((a, b) => b.totalTime - a.totalTime)[0]
+})
+const TimeDelta = computed(() => lastTotalTime.value > 0 ? Number(((currentTotalTime.value / lastTotalTime.value - 1) * 100).toFixed(2)) : currentTotalTime.value > 0 ? 100 : 0)
+function formatTime(seconds = 0) {
+  return Time.toHoursString(seconds)
 }
-
-// 当前的累计使用时间
-const currentTotalTime = ref(0)
-const currentAppCount = ref(0)
-const mostTimeUsageApp = ref<AppData>({} as AppData)
-
-// 上次的累计使用时间
-const lastTotalTime = ref(0)
-const lastAppCount = ref(0)
-
-watch(() => props.currentAppInfo, (newVal) => {
-  currentTotalTime.value = newVal.reduce((acc: number, cur: AppData) => acc + cur.totalTime, 0)
-  const tempAppInfo = newVal.reduce((acc: Record<number, AppData>, item: AppData) => {
-    if (acc[item.id!]) {
-      acc[item.id!].totalTime += item.totalTime
-    }
-    else {
-      acc[item.id!] = { ...item }
-    }
-    return acc
-  }, {})
-  currentAppCount.value = Object.values(tempAppInfo).length
-  mostTimeUsageApp.value = (Object.values(tempAppInfo) as AppData[]).reduce((acc: AppData, cur: AppData) => cur.totalTime > acc.totalTime ? cur : acc, newVal[0])
-})
-
-watch(() => props.lastAppInfo, (newVal) => {
-  lastTotalTime.value = newVal.reduce((acc: number, cur: DailyLogModels) => acc + cur.time, 0)
-  const tempAppInfo = newVal.reduce((acc: Record<number, AppData>, item: AppData) => {
-    if (acc[item.id!]) {
-      acc[item.id!].totalTime += item.totalTime
-    }
-    else {
-      acc[item.id!] = { ...item }
-    }
-    return acc
-  }, {})
-  lastAppCount.value = Object.values(tempAppInfo).length
-})
-
-const AppCountDelta = computed(() => {
-  return currentAppCount.value - lastAppCount.value
-})
-
-const TimeDelta = computed(() => {
-  if (lastTotalTime.value <= 0 && currentTotalTime.value > 0) {
-    return 100
-  }
-  if (currentTotalTime.value <= 0) {
-    return 0
-  }
-
-  const todayHour = Number((currentTotalTime.value / 3600).toFixed(2))
-  const lastHour = Number((lastTotalTime.value / 3600).toFixed(2))
-
-  let delta = 1 - Number((todayHour / lastHour).toFixed(2))
-  delta = delta >= 1 ? delta : -delta
-  return Number((delta * 100).toFixed(2))
-})
 </script>
 
 <template>
