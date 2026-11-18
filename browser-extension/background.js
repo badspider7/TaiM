@@ -13,23 +13,27 @@ async function report() {
   }
   busy = true
   try {
+    const saved = await chrome.storage.local.get('taimToken')
+    const token = saved.taimToken || globalThis.TAIM_CONNECTION.token
+    if (!/^[a-f0-9]{64}$/.test(token))
+      throw new Error('需要配对')
     const win = await chrome.windows.getLastFocused({ populate: true })
     const tab = win.tabs?.find(tab => tab.active)
     const focused = !!(win.focused && !win.incognito && tab && !tab.incognito && /^https?:\/\//i.test(tab.url ?? ''))
     const response = await fetch(`http://127.0.0.1:${globalThis.TAIM_CONNECTION.port}/v1/activity`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${globalThis.TAIM_CONNECTION.token}`, 'Content-Type': 'application/json' },
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ client, sequence: sequence++, browser: /Edg\//.test(navigator.userAgent) ? 'edge' : 'chrome', focused, url: focused ? tab.url : '', title: focused ? (tab.title ?? '').slice(0, 512) : '' }),
       signal: AbortSignal.timeout(1800),
     })
     if (!response.ok)
       throw new Error(`HTTP ${response.status}`)
     await chrome.action.setBadgeText({ text: '' })
-    await chrome.action.setTitle({ title: 'TaiM 网站计时：已连接本机 TaiM' })
+    await chrome.action.setTitle({ title: 'TaiM 网站计时：已连接本机 TaiM，点击修改配对' })
   }
   catch {
     await chrome.action.setBadgeText({ text: '!' })
-    await chrome.action.setTitle({ title: 'TaiM 未连接：请启动 TaiM 并在网站页面开启计时' })
+    await chrome.action.setTitle({ title: 'TaiM 未连接：点击配对，并在 TaiM 中开启网站计时' })
   }
   finally {
     busy = false
@@ -41,6 +45,7 @@ async function report() {
 }
 
 chrome.tabs.onActivated.addListener(() => void report())
+chrome.storage.onChanged.addListener(() => void report())
 chrome.tabs.onUpdated.addListener((_id, change) => {
   if (change.url || change.title || change.status === 'complete')
     void report()

@@ -265,11 +265,16 @@ export class BrowserTracking {
     this.samples.clear()
   }
 
+  async pairingCode() {
+    await this.initialize()
+    return this.token
+  }
+
   async exportExtension() {
     await this.initialize()
     const target = path.join(app.getPath('userData'), 'browser-extension')
     await fs.mkdir(target, { recursive: true })
-    for (const name of ['manifest.json', 'background.js', 'README.txt'])
+    for (const name of ['manifest.json', 'background.js', 'options.html', 'options.js', 'options.css', 'README.txt'])
       await fs.copyFile(path.join(app.getAppPath(), 'browser-extension', name), path.join(target, name))
     await fs.writeFile(path.join(target, 'connection.js'), `globalThis.TAIM_CONNECTION = ${JSON.stringify({ port: defaultBrowserPort, token: this.token })}\n`)
     return target

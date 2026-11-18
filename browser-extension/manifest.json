@@ -2,11 +2,12 @@
   "manifest_version": 3,
   "name": "TaiM 网站计时",
   "description": "将前台标签页网址发送到本机 TaiM，统计网站停留时间。",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "minimum_chrome_version": "120",
-  "permissions": ["tabs", "alarms"],
+  "permissions": ["tabs", "alarms", "storage"],
   "host_permissions": ["http://127.0.0.1:17384/*"],
   "incognito": "not_allowed",
   "background": { "service_worker": "background.js" },
-  "action": { "default_title": "TaiM 网站计时：在 TaiM 的网站页面查看连接状态" }
+  "options_ui": { "page": "options.html", "open_in_tab": true },
+  "action": { "default_title": "TaiM 网站计时：配对与连接", "default_popup": "options.html" }
 }

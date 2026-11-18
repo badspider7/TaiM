@@ -1,0 +1,8 @@
+:root { font-family: system-ui, sans-serif; color-scheme: light dark; }
+body { min-width: 320px; max-width: 520px; margin: 24px auto; padding: 0 24px; }
+h1 { font-size: 20px; }
+p { line-height: 1.65; }
+label { display: block; margin-bottom: 8px; }
+input { box-sizing: border-box; width: 100%; padding: 10px; border: 1px solid #8888; border-radius: 6px; }
+button { margin-top: 12px; padding: 9px 16px; cursor: pointer; border: 1px solid #8888; border-radius: 6px; }
+.hint { color: #777; font-size: 12px; }

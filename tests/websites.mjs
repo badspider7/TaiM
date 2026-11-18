@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import vm from 'node:vm'
-import { app, dialog } from 'electron'
+import { app, clipboard, dialog } from 'electron'
 import { BrowserTracking, browserTracking, normalizeWebUrl } from '../electron/browser/tracking.ts'
 import { getDB } from '../electron/db/better-sqlite3.ts'
 import { validateBackup } from '../electron/db/backup.ts'
@@ -128,6 +128,7 @@ export async function testWebsites(test, { temporary, win, invoke, js, waitText 
       assert.equal(manifest.incognito, 'not_allowed')
       assert.deepEqual(manifest.host_permissions, ['http://127.0.0.1:17384/*'])
       assert.equal(manifest.permissions.includes('history'), false)
+      assert.equal(manifest.action.default_popup, 'options.html')
       const source = await fs.readFile(path.join(folder, 'background.js'), 'utf8')
       const reports = []
       let interval
@@ -140,7 +141,7 @@ export async function testWebsites(test, { temporary, win, invoke, js, waitText 
       const fakeInterval = (fn) => {
         interval = fn
       }
-      const sandbox = { crypto: { randomUUID: () => 'test-worker' }, navigator: { userAgent: 'Test Edg/140' }, AbortSignal, importScripts() {}, setInterval: fakeInterval, TAIM_CONNECTION: { port: 17384, token }, fetch: fakeFetch, chrome: { windows: { getLastFocused: async () => window, onFocusChanged: event }, tabs: { onActivated: event, onUpdated: event, onRemoved: event }, alarms: { create: async () => {}, onAlarm: event }, runtime: { onStartup: event, onInstalled: event }, action: { setBadgeText: async () => {}, setTitle: async () => {} } } }
+      const sandbox = { crypto: { randomUUID: () => 'test-worker' }, navigator: { userAgent: 'Test Edg/140' }, AbortSignal, importScripts() {}, setInterval: fakeInterval, TAIM_CONNECTION: { port: 17384, token }, fetch: fakeFetch, chrome: { storage: { local: { get: async () => ({}) }, onChanged: event }, windows: { getLastFocused: async () => window, onFocusChanged: event }, tabs: { onActivated: event, onUpdated: event, onRemoved: event }, alarms: { create: async () => {}, onAlarm: event }, runtime: { onStartup: event, onInstalled: event }, action: { setBadgeText: async () => {}, setTitle: async () => {} } } }
       vm.runInNewContext(source, sandbox)
       const settle = () => new Promise(resolve => setImmediate(resolve))
       await settle()
@@ -153,6 +154,18 @@ export async function testWebsites(test, { temporary, win, invoke, js, waitText 
         assert.equal(reports.at(-1).focused, false)
         assert.equal(reports.at(-1).url, '')
       }
+      // Generic downloads use the locally stored pairing code instead of a bundled secret.
+      sandbox.TAIM_CONNECTION.token = ''
+      sandbox.chrome.storage.local.get = async () => ({ taimToken: token })
+      window = { focused: true, incognito: false, tabs: [{ active: true, url: 'https://paired.test/', title: 'Paired page' }] }
+      interval()
+      await settle()
+      assert.equal(reports.at(-1).url, 'https://paired.test/')
+      const count = reports.length
+      sandbox.chrome.storage.local.get = async () => ({})
+      interval()
+      await settle()
+      assert.equal(reports.length, count)
     })
   }
   finally {
@@ -245,5 +258,53 @@ export async function testWebsites(test, { temporary, win, invoke, js, waitText 
     assert.throws(() => validateBackup({ ...backup, websites: [{ ...websites[0], url: 'javascript:alert(1)' }] }))
     assert.throws(() => validateBackup({ ...backup, websites: [{ ...websites[0], time: -1 }] }))
     assert.throws(() => validateBackup({ ...backup, websites: [{ ...websites[0], hoursTime: '2026-02-30 10:00:00' }] }))
+  })
+  await test('Website install instructions live on a separate help page and pairing never returns secrets over IPC', async () => {
+    assert.equal(await js('!!document.querySelector(\'.website-setup\')'), false)
+    assert.equal(await js('document.body.innerText.includes(\'首次使用：\')'), false)
+    await js('document.documentElement.classList.remove(\'dark\')')
+    await fs.writeFile(path.join(temporary, 'websites-compact.png'), (await win.webContents.capturePage()).toPNG())
+    await js('[...document.querySelectorAll(\'a\')].find(a => a.textContent.trim() === \'使用说明 / 扩展下载\').click()')
+    await waitText('网站计时使用说明')
+    await waitText('扩展下载（Releases）')
+    const originalWrite = clipboard.writeText
+    let copied = ''
+    clipboard.writeText = (value) => {
+      copied = value
+    }
+    try {
+      const result = await invoke('websites:pair')
+      assert.deepEqual(result, { copied: true })
+      assert.match(copied, /^[a-f0-9]{64}$/)
+      assert.equal(await js(`document.body.innerText.includes(${JSON.stringify(copied)})`), false)
+    }
+    finally { clipboard.writeText = originalWrite }
+    await fs.writeFile(path.join(temporary, 'website-help.png'), (await win.webContents.capturePage()).toPNG())
+    await js('document.documentElement.classList.add(\'dark\')')
+  })
+  await test('Extension pairing form rejects invalid codes and stores valid codes only in local extension storage', async () => {
+    const input = { value: '' }
+    const status = { textContent: '' }
+    const button = { disabled: false }
+    let submit
+    let stored = {}
+    const form = { addEventListener: (_event, callback) => {
+      submit = callback
+    } }
+    const source = await fs.readFile('browser-extension/options.js', 'utf8')
+    vm.runInNewContext(source, {
+      document: { querySelector: selector => ({ '#token': input, '#status': status, '#pair-form': form, 'button': button })[selector] },
+      TAIM_CONNECTION: { token: '' },
+      chrome: { storage: { local: { get: async () => stored, set: async (value) => { stored = value } } } },
+    })
+    await new Promise(resolve => setImmediate(resolve))
+    input.value = 'invalid'
+    await submit({ preventDefault() {} })
+    assert.equal(Object.keys(stored).length, 0)
+    input.value = 'b'.repeat(64)
+    await submit({ preventDefault() {} })
+    assert.equal(stored.taimToken, 'b'.repeat(64))
+    assert.equal(button.disabled, false)
+    assert.ok(status.textContent.includes('配对码已保存'))
   })
 }

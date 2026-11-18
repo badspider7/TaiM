@@ -44,9 +44,6 @@ async function run(action: string) {
     if (action === 'enable') {
       status.value = await window.ipcRenderer.invoke('websites:enable', !status.value.enabled)
     }
-    else if (action === 'extension') {
-      message.value = `扩展目录：${await window.ipcRenderer.invoke('websites:extension')}`
-    }
     else if (action === 'export') {
       const result = await window.ipcRenderer.invoke('websites:export', start.value, end.value)
       if (result.path)
@@ -71,32 +68,23 @@ onUnmounted(() => clearInterval(timer))
 
 <template>
   <div class="page-scroll">
-    <h1 class="text-lg mb-5">
-      网站停留时间
-    </h1>
-    <section class="website-setup">
-      <div class="toolbar">
-        <strong role="status">{{ connection }}</strong>
+    <div class="website-heading">
+      <h1 class="text-lg">
+        网站停留时间
+      </h1>
+      <div class="website-controls text-sm">
+        <span role="status" class="text-muted-foreground">{{ connection }}</span>
         <button class="action-button" :disabled="busy" @click="run('enable')">
-          {{ status.enabled ? '暂停网站计时' : '开启网站计时' }}
+          {{ status.enabled ? '暂停计时' : '开启计时' }}
         </button>
-        <button class="action-button" :disabled="busy" @click="run('extension')">
-          准备 / 打开扩展目录
-        </button>
+        <router-link to="/websites/help" class="text-muted-foreground underline">
+          使用说明 / 扩展下载
+        </router-link>
       </div>
-      <p v-if="status.error" role="alert" class="error-message">
-        {{ status.error }}
-      </p>
-      <p class="text-sm my-3">
-        首次使用：开启计时 → 准备扩展目录 → 在 Chrome / Edge 的扩展管理页开启开发者模式 → 加载已解压的扩展，选择刚打开的目录。
-      </p>
-      <p class="text-sm text-muted-foreground">
-        支持 Chrome / Edge 120+。仅统计前台标签页，空闲、锁屏和休眠时暂停；无痕、内部页面和后台网页不计时。约每秒采样，扩展断开后停止计时。
-      </p>
-      <p class="text-sm text-muted-foreground mt-2">
-        记录保存在本机，包含网址路径及查询参数，移除账号密码和 # 片段。网站时间是浏览器使用时间的细分，不会重复加进应用总时长。配对后的扩展目录请勿分享。
-      </p>
-    </section>
+    </div>
+    <p v-if="status.error" role="alert" class="error-message mt-3">
+      {{ status.error }}
+    </p>
     <form class="toolbar mt-5" @submit.prevent="run('load')">
       <input v-model="start" type="date" aria-label="网站开始日期"><span>至</span>
       <input v-model="end" type="date" aria-label="网站结束日期">
@@ -152,12 +140,16 @@ onUnmounted(() => clearInterval(timer))
     </table>
     <p v-else-if="!busy" class="text-muted-foreground my-8">
       暂无匹配的网站记录。连接扩展后，在前台浏览普通网页，再查询 / 刷新。
+      <router-link v-if="!status.connected" to="/websites/help" class="underline">
+        查看连接方法
+      </router-link>
     </p>
   </div>
 </template>
 
 <style scoped>
-.website-setup { padding: 16px; border: 1px solid hsl(var(--border)); border-radius: 8px; }
+.website-heading, .website-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.website-heading { justify-content: space-between; }
 .website-table { table-layout: fixed; }
 .website-table th:first-child { width: 66%; }
 </style>

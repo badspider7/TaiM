@@ -5,7 +5,7 @@ import { DEFAULT_DISPLAY_SIDEBAR } from '@/const'
 
 const sideBarList = DEFAULT_DISPLAY_SIDEBAR
 const route = useRoute()
-const activeMenuName = computed(() => route.name)
+const activeMenuName = computed(() => route.name === 'website-help' ? 'websites' : route.name)
 </script>
 
 <template>

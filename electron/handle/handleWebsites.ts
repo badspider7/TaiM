@@ -1,5 +1,5 @@
 import fs from 'node:fs/promises'
-import { type BrowserWindow, dialog, ipcMain, shell } from 'electron'
+import { type BrowserWindow, clipboard, dialog, ipcMain, shell } from 'electron'
 import { browserTracking } from '../browser/tracking'
 import { getDB } from '../db/better-sqlite3'
 import { csvCell } from '../db/backup'
@@ -19,6 +19,10 @@ function bounds(start: unknown, end: unknown) {
 
 export function setupWebsites(win: BrowserWindow) {
   ipcMain.handle('websites:status', () => browserTracking.status())
+  ipcMain.handle('websites:pair', async () => {
+    clipboard.writeText(await browserTracking.pairingCode())
+    return { copied: true }
+  })
   let changing = false
   ipcMain.handle('websites:enable', async (_event, enabled: unknown) => {
     if (typeof enabled !== 'boolean' || changing)

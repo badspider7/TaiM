@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TaiM 网站计时 · 配对</title>
+    <link rel="stylesheet" href="options.css">
+  </head>
+  <body>
+    <main>
+      <h1>TaiM 网站计时</h1>
+      <p>在 TaiM → 网站 → 使用说明中复制本机配对码，粘贴到这里。</p>
+      <form id="pair-form">
+        <label for="token">本机配对码</label>
+        <input id="token" type="password" autocomplete="off" spellcheck="false" maxlength="64" required>
+        <button type="submit">保存并连接</button>
+      </form>
+      <p id="status" role="status"></p>
+      <p class="hint">需要保持 TaiM 运行并开启网站计时。配对码仅存于本机，不通过浏览器同步。不要分享配对码。</p>
+    </main>
+    <script src="connection.js"></script>
+    <script src="options.js"></script>
+  </body>
+</html>

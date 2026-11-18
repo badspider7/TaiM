@@ -2,6 +2,11 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 
 const routes = [
   {
+    path: '/websites/help',
+    name: 'website-help',
+    component: () => import('@/pages/websites/help.vue'),
+  },
+  {
     path: '/websites',
     name: 'websites',
     component: () => import('@/pages/websites/index.vue'),

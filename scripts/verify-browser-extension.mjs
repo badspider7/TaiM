@@ -42,7 +42,7 @@ const server = http.createServer((request, response) => {
 })
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
 const port = server.address().port
-for (const name of ['background.js', 'README.txt'])
+for (const name of ['background.js', 'options.html', 'options.js', 'options.css', 'README.txt'])
   await fs.copyFile(path.resolve('browser-extension', name), path.join(extension, name))
 const manifest = JSON.parse(await fs.readFile('browser-extension/manifest.json', 'utf8'))
 manifest.host_permissions = [`http://127.0.0.1:${port}/*`]

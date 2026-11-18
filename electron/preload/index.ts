@@ -5,6 +5,7 @@ const invokes = new Set([
   'websites:status',
   'websites:enable',
   'websites:extension',
+  'websites:pair',
   'websites:range',
   'websites:export',
   'websites:clear',
