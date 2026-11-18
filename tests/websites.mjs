@@ -200,6 +200,8 @@ export async function testWebsites(test, { temporary, win, invoke, js, waitText 
   await test('Website page queries domain and URL groups, validates dates and exports safe CSV', async () => {
     const byDomain = await invoke('websites:range', '2026-11-18', '2026-11-18', 'domain')
     assert.equal(byDomain.find(r => r.domain === 'example.test').time, 5.5)
+    assert.equal(byDomain.find(r => r.domain === 'example.test').title, 'Page B')
+    assert.equal(byDomain.find(r => r.domain === 'example.test').pageCount, 2)
     assert.equal((await invoke('websites:range', '2026-11-18', '2026-11-18', 'url')).filter(r => r.domain === 'example.test').length, 2)
     await assert.rejects(() => invoke('websites:range', '2026-02-30', '2026-11-18', 'url'))
     await assert.rejects(() => invoke('websites:range', '2026-11-18', '2026-11-18', 'invalid'))
@@ -215,6 +217,24 @@ export async function testWebsites(test, { temporary, win, invoke, js, waitText 
     dialog.showSaveDialog = async () => ({ canceled: false, filePath: exportPath })
     await invoke('websites:export', '2026-11-18', '2026-11-18')
     assert.ok((await fs.readFile(exportPath, 'utf8')).includes('https://example.test/a?lesson=1'))
+  })
+  await test('Website titles use the latest nonempty hourly title and render remote markup as plain text', async () => {
+    const insert = db.prepare('INSERT INTO WebsiteHours(browser, url, domain, title, hoursTime, time) VALUES (?, ?, ?, ?, ?, ?)')
+    const title = 'Alpha <img src=x onerror=alert(1)>'
+    insert.run('chrome', 'https://titles.test/', 'titles.test', 'Zulu old title', '2026-11-18 10:00:00', 1)
+    insert.run('chrome', 'https://titles.test/', 'titles.test', title, '2026-11-18 11:00:00', 1)
+    insert.run('chrome', 'https://titles.test/', 'titles.test', '', '2026-11-18 12:00:00', 1)
+    const rows = await invoke('websites:range', '2026-11-18', '2026-11-18', 'url')
+    assert.equal(rows.find(row => row.domain === 'titles.test').title, title)
+    await js('[...document.querySelectorAll(\'button\')].find(b => b.textContent.trim() === \'查询 / 刷新\').click()')
+    await waitText(title)
+    assert.equal(await js('document.querySelectorAll(\'.website-table img\').length'), 0)
+    await js('document.querySelector(\'[aria-label="网站汇总方式"]\').value = \'domain\'; document.querySelector(\'[aria-label="网站汇总方式"]\').dispatchEvent(new Event(\'change\', { bubbles: true }))')
+    await waitText('主要页面：Page B')
+    await js('[...document.querySelectorAll(\'tr\')].find(row => row.textContent.includes(\'example.test\')).querySelector(\'button\').click()')
+    await waitText('https://example.test/a?lesson=1')
+    await waitText('example.test · 查看全部网站')
+    assert.equal(await js('[...document.querySelectorAll(\'.website-table tbody tr\')].length'), 2)
   })
   await test('Website backup validation supports old backups and rejects unsafe or duplicate website records', () => {
     const backup = { format: 'taim-backup', version: 1, exportedAt: new Date().toISOString(), apps: [], hours: [], categories: [] }

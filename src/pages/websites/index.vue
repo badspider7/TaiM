@@ -2,17 +2,19 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { Time, formatDate } from '@/utils/timerEvent'
 
-interface Row { browser: string, url: string, domain: string, title: string, time: number }
+interface Row { browser: string, url: string, domain: string, title: string, time: number, pageCount: number }
 const start = ref(formatDate(new Date()).slice(0, 10))
 const end = ref(start.value)
-const group = ref('domain')
+const group = ref('url')
+const selectedDomain = ref('')
 const query = ref('')
 const data = ref<Row[]>([])
 const status = ref({ enabled: false, listening: false, connected: false, error: '', port: 17384 })
 const busy = ref(false)
 const message = ref('')
 const error = ref('')
-const rows = computed(() => data.value.filter(r => `${r.domain} ${r.url} ${r.title} ${r.browser}`.toLowerCase().includes(query.value.toLowerCase())))
+const rows = computed(() => data.value.filter(r => (!selectedDomain.value || r.domain === selectedDomain.value)
+  && `${r.domain} ${r.url} ${r.title} ${r.browser}`.toLowerCase().includes(query.value.toLowerCase())))
 const connection = computed(() => !status.value.enabled ? '未开启' : !status.value.listening ? '连接服务未启动' : status.value.connected ? '扩展已连接' : '等待扩展连接')
 let timer: ReturnType<typeof setInterval> | undefined
 async function refreshStatus() {
@@ -21,6 +23,16 @@ async function refreshStatus() {
 async function load() {
   data.value = await window.ipcRenderer.invoke('websites:range', start.value, end.value, group.value)
   await refreshStatus()
+}
+function changeGroup() {
+  selectedDomain.value = ''
+  void run('load')
+}
+function showDomain(domain: string) {
+  group.value = 'url'
+  selectedDomain.value = domain
+  query.value = ''
+  void run('load')
 }
 async function run(action: string) {
   if (busy.value)
@@ -88,7 +100,7 @@ onUnmounted(() => clearInterval(timer))
     <form class="toolbar mt-5" @submit.prevent="run('load')">
       <input v-model="start" type="date" aria-label="网站开始日期"><span>至</span>
       <input v-model="end" type="date" aria-label="网站结束日期">
-      <select v-model="group" aria-label="网站汇总方式" :disabled="busy" @change="run('load')">
+      <select v-model="group" aria-label="网站汇总方式" :disabled="busy" @change="changeGroup">
         <option value="domain">
           按域名汇总
         </option>
@@ -117,16 +129,22 @@ onUnmounted(() => clearInterval(timer))
     </p>
     <p class="text-sm text-muted-foreground my-4">
       {{ rows.length }} 项 · 总计 {{ Time.toString(rows.reduce((sum, r) => sum + r.time, 0)) }}
+      <button v-if="selectedDomain" class="ml-3 underline" @click="selectedDomain = ''">
+        {{ selectedDomain }} · 查看全部网站
+      </button>
     </p>
     <table v-if="rows.length" class="data-table website-table">
-      <thead><tr><th>{{ group === 'url' ? '网址 / 页面标题' : '域名' }}</th><th>浏览器</th><th>停留时间</th></tr></thead>
+      <thead><tr><th>{{ group === 'url' ? '页面标题 / 网址' : '域名 / 主要页面' }}</th><th>浏览器</th><th>停留时间</th></tr></thead>
       <tbody>
         <tr v-for="r in rows" :key="`${r.browser}/${r.url || r.domain}`">
           <td>
-            <span class="break-all">{{ r.url || r.domain }}</span>
-            <p v-if="r.title" class="text-sm text-muted-foreground mt-1 break-all">
-              {{ r.title }}
+            <span class="break-all">{{ group === 'url' ? r.title || '未命名页面' : r.domain }}</span>
+            <p class="text-sm text-muted-foreground mt-1 break-all">
+              {{ group === 'url' ? r.url : `主要页面：${r.title || '暂无标题'}` }}
             </p>
+            <button v-if="group === 'domain'" class="text-sm text-muted-foreground underline mt-1" :disabled="busy" @click="showDomain(r.domain)">
+              查看 {{ r.pageCount }} 个页面
+            </button>
           </td>
           <td>{{ r.browser === 'edge' ? 'Edge' : 'Chrome' }}</td><td>{{ Time.toString(r.time) }}</td>
         </tr>

@@ -42,9 +42,19 @@ export function setupWebsites(win: BrowserWindow) {
     if (!['url', 'domain'].includes(group))
       throw new Error('分组方式无效')
     flushUsage()
-    return getDB().prepare(`SELECT browser, ${group === 'url' ? 'url' : '\'\' AS url'}, domain,
-      ${group === 'url' ? 'MAX(title)' : '\'\''} AS title, SUM(time) AS time
-      FROM WebsiteHours WHERE hoursTime BETWEEN ? AND ? GROUP BY browser, ${group} ORDER BY time DESC`).all(...range)
+    const pages = `WITH pages AS (
+      SELECT w.browser, w.url, w.domain, SUM(w.time) AS time,
+        COALESCE((SELECT title FROM WebsiteHours latest WHERE latest.browser = w.browser AND latest.url = w.url
+          AND latest.hoursTime BETWEEN @start AND @end AND trim(latest.title) != '' ORDER BY latest.hoursTime DESC LIMIT 1), '') AS title
+      FROM WebsiteHours w WHERE w.hoursTime BETWEEN @start AND @end GROUP BY w.browser, w.url
+    )`
+    const query = group === 'url'
+      ? 'SELECT *, 1 AS pageCount FROM pages ORDER BY time DESC, url'
+      : `SELECT p.browser, '' AS url, p.domain, SUM(p.time) AS time, COUNT(*) AS pageCount,
+          (SELECT title FROM pages representative WHERE representative.browser = p.browser AND representative.domain = p.domain
+            ORDER BY representative.time DESC, representative.url LIMIT 1) AS title
+        FROM pages p GROUP BY p.browser, p.domain ORDER BY time DESC, p.domain`
+    return getDB().prepare(`${pages} ${query}`).all({ start: range[0], end: range[1] })
   })
   ipcMain.handle('websites:export', async (_event, start, end) => {
     const range = bounds(start, end)
