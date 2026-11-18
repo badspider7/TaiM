@@ -25,6 +25,8 @@ for (const name of manifests) {
   assert.ok(manifest.files.some(file => file.url === installerName && file.sha512 === sha512 && file.size === installer.length), 'Invalid installer metadata')
 }
 const assets = [installerName, `${installerName}.blockmap`, ...manifests].sort()
+if (files.includes('TaiM-Browser-Extension.zip'))
+  assets.push('TaiM-Browser-Extension.zip')
 const checksums = await Promise.all(assets.map(async name => `${createHash('sha256').update(await fs.readFile(path.join(directory, name))).digest('hex')}  ${name}`))
 await fs.writeFile(path.join(directory, 'SHA256SUMS.txt'), `${checksums.join('\n')}\n`)
 console.log(`Verified ${version}: installer, blockmap, update metadata and release notes. Checksums generated.`)

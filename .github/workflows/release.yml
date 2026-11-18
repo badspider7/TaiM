@@ -55,6 +55,8 @@ jobs:
         run: pnpm test
       - name: Build NSIS installer
         run: pnpm exec electron-builder --win --publish never
+      - name: Package public browser extension
+        run: pnpm package:extension
       - name: Verify update metadata and generate checksums
         env:
           RELEASE_TAG: ${{ github.ref_name }}
@@ -69,6 +71,7 @@ jobs:
             release/${{ steps.version.outputs.version }}/*.blockmap
             release/${{ steps.version.outputs.version }}/latest.yml
             release/${{ steps.version.outputs.version }}/SHA256SUMS.txt
+            release/${{ steps.version.outputs.version }}/TaiM-Browser-Extension.zip
 
   publish:
     name: Publish GitHub Release

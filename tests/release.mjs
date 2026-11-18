@@ -19,6 +19,7 @@ await fs.writeFile(path.join(output, name), body)
 await fs.writeFile(path.join(output, `${name}.blockmap`), 'blockmap fixture')
 await fs.writeFile(path.join(output, 'latest.yml'), JSON.stringify(manifest))
 await fs.writeFile(path.join(output, 'builder-debug.yml'), 'debug:\n  reason: diagnostic output, not an update manifest\n')
+await fs.writeFile(path.join(output, 'TaiM-Browser-Extension.zip'), 'public extension fixture')
 function verify() {
   return spawnSync(process.execPath, [path.resolve('scripts/verify-release.mjs')], {
     cwd: temporary,
@@ -29,6 +30,7 @@ function verify() {
 const valid = verify()
 assert.equal(valid.status, 0, valid.stderr)
 assert.equal((await fs.readFile(path.join(output, 'SHA256SUMS.txt'), 'utf8')).includes('builder-debug'), false)
+assert.ok((await fs.readFile(path.join(output, 'SHA256SUMS.txt'), 'utf8')).includes('TaiM-Browser-Extension.zip'))
 await fs.writeFile(path.join(output, name), 'tampered installer')
 const invalid = verify()
 assert.notEqual(invalid.status, 0)
