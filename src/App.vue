@@ -1,19 +1,26 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import Header from '@/components/layout/Header.vue'
 import SideBar from '@/components/layout/SideBar.vue'
 import { useAppInfo } from '@/store/app'
 import { useSettings } from '@/store/settings'
+import { useUpdates } from '@/store/updates'
+import UpdateNotice from '@/components/UpdateNotice.vue'
+
+const updates = useUpdates()
 
 onMounted(() => {
   const appInfo = useAppInfo()
   appInfo.getAppInfo()
   useSettings().load()
+  void updates.initialize()
 })
+onUnmounted(() => updates.dispose())
 </script>
 
 <template>
   <Header />
+  <UpdateNotice />
   <div class="app-container">
     <SideBar />
     <router-view class="display-content" />

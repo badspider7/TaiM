@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-const events = new Set(['refresh-chart', 'window.maximize'])
+const events = new Set(['refresh-chart', 'window.maximize', 'updater:state'])
 const invokes = new Set([
   'titleBarControl:minimize',
   'titleBarControl:maximizeOrUnmaximize',
@@ -21,6 +21,10 @@ const invokes = new Set([
   'data:import',
   'data:folder',
   'app:version',
+  'updater:get',
+  'updater:check',
+  'updater:download',
+  'updater:install',
 ])
 const listeners = new Map<string, Map<(...args: any[]) => void, (...args: any[]) => void>>()
 contextBridge.exposeInMainWorld('ipcRenderer', {

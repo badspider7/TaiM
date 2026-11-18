@@ -1,5 +1,6 @@
 <script setup lang='ts'>
-import { ref, shallowRef } from 'vue'
+import { ref, shallowRef, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import Data from './components/Data.vue'
 import Common from './components/Common.vue'
 import Behavior from './components/Behavior.vue'
@@ -19,6 +20,7 @@ const comMap = {
   behavior: Behavior,
   about: About,
 }
+const route = useRoute()
 const activeTab = ref('common')
 const acitveCom = shallowRef(Common)
 
@@ -29,6 +31,7 @@ function tabChange(input: string | number) {
   activeTab.value = value
   acitveCom.value = comMap[value]
 }
+watch(() => route.query.tab, value => tabChange(typeof value === 'string' ? value : 'common'), { immediate: true })
 </script>
 
 <template>

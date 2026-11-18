@@ -17,6 +17,8 @@ async function test(name, fn) {
 async function run() {
   try {
     await app.whenReady()
+    const { testUpdates } = await import('./updates.mjs')
+    await testUpdates(test, temporary)
     const { initDb } = await import('../electron/db/index.ts')
     const { getDB } = await import('../electron/db/better-sqlite3.ts')
     const { executeMethodsInOrder: write } = await import('../electron/handle/handleFocusWin.ts')
@@ -108,6 +110,8 @@ async function run() {
     win = new BrowserWindow({ show: false, width: 1100, height: 800, webPreferences: { preload: path.resolve('dist-electron/preload/index.cjs'), sandbox: true, contextIsolation: true, nodeIntegration: false, offscreen: true, backgroundThrottling: false } })
     setupSettings(win)
     handleUsageData()
+    const { setupUpdates } = await import('../electron/update/index.ts')
+    setupUpdates(win, () => {}, () => {})
     const errors = []
     win.webContents.on('console-message', (_event, level, message) => {
       if (level === 3) {
@@ -165,6 +169,30 @@ async function run() {
       await waitText('导出 JSON 备份')
       await pause(100)
       await fs.writeFile(path.join(temporary, 'settings.png'), (await win.webContents.capturePage()).toPNG())
+    })
+    await test('About page deep link shows offline release history and disables development updates', async () => {
+      await js('location.hash = \'#/setting?tab=about\'')
+      await waitText('更新日志')
+      await waitText('开发模式不下载和安装更新')
+      assert.equal(await js('[...document.querySelectorAll(\'button\')].find(b => b.textContent.trim() === \'检查更新\').disabled'), true)
+      await pause(100)
+      await fs.writeFile(path.join(temporary, 'updates.png'), (await win.webContents.capturePage()).toPNG())
+    })
+    await test('Update events show the global notice, download progress and safe remote notes', async () => {
+      const original = await invoke('updater:get')
+      const available = { ...original, revision: 100, enabled: true, phase: 'available', availableVersion: '0.0.2-beta.1', releaseNotes: '<img src=x onerror=alert(1)>修复记录', message: '发现新版本 0.0.2-beta.1' }
+      win.webContents.send('updater:state', available)
+      await waitText('发现新版本')
+      await js('location.hash = \'#/\'')
+      await waitText('最为频繁')
+      await js('document.querySelector(\'.update-notice button\').click()')
+      await waitText('新版本 0.0.2-beta.1 更新说明')
+      assert.equal(await js('document.querySelectorAll(\'.release-notes img\').length'), 0)
+      win.webContents.send('updater:state', { ...available, revision: 101, phase: 'downloading', percent: 25, transferred: 250, total: 1000, message: '正在下载更新，可继续使用 TaiM' })
+      await waitText('25.0%')
+      win.webContents.send('updater:state', { ...available, revision: 102, phase: 'downloaded', percent: 100, message: '更新已准备就绪' })
+      await waitText('重启并安装')
+      win.webContents.send('updater:state', { ...original, revision: 103 })
     })
     const exportPath = path.join(temporary, 'backup.json')
     await test('JSON and CSV export, backup validation, canceled import and confirmed restore', async () => {

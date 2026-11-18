@@ -1,24 +1,13 @@
 // @see https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "YourAppID",
+  "appId": "io.github.badspider7.taim",
   "asar": true,
   "npmRebuild": false,
   "asarUnpack": ["dist-native/**", "node_modules/get-windows/**"],
   "productName": "TaiM",
-  // 更新服务器信息
-  // "publish": [
-  //   {
-  //     "provider": "github",
-  //     "owner": "badspider7",
-  //     "repo": "Taim"
-  //   }
-  // ],
-  // // 更新日志
-  // "releaseInfo": {
-  //   "releaseName": "normal", // normal 弹窗 / major 强制更新
-  //   "releaseNotesFile": "./release/releaseNotes.md"
-  // },
+  "publish": [{ "provider": "github", "owner": "badspider7", "repo": "TaiM" }],
+  "releaseInfo": { "releaseNotesFile": "docs/release-notes.md" },
   "directories": {
     "output": "release/${version}"
   },
@@ -26,7 +15,6 @@
     "dist",
     "dist-electron",
     "dist-native",
-    "!node_modules/**/node_modules",
     "!**/node_modules/**/*.ts",
     "!**/node_modules/**/*.js.map",
     "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",

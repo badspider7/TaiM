@@ -8,6 +8,8 @@ import { clearAllTimer, isComputerSleep, startRecord } from '../utils'
 import logger from '../logger'
 import { initDb } from '../db'
 import { getConfig } from '../config'
+import { setupUpdates } from '../update'
+import { cache } from '../utils/activeAppCache'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -151,6 +153,14 @@ app.whenReady().then(async () => {
   initDb()
   await createWindow()
   setupHandle(win!)
+  setupUpdates(win!, () => {
+    clearAllTimer()
+    cache.flush(true)
+    quitting = true
+  }, () => {
+    quitting = false
+    startRecord()
+  })
   startRecord()
   isComputerSleep()
 })

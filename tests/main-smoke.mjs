@@ -41,11 +41,13 @@ async function run() {
       const Database = require('better-sqlite3')
       const db = new Database(path.join(temporary, 'test.sqlite3'), { nativeBinding: process.env.TAIM_SQLITE_BINDING })
       assert.equal(db.prepare('SELECT COUNT(*) AS n FROM HoursLogModels WHERE time < 0').get().n, 0)
-      assert.ok(db.prepare('SELECT SUM(time) AS n FROM HoursLogModels').get().n > 0)
+      const hours = db.prepare('SELECT COALESCE(SUM(time), 0) AS n FROM HoursLogModels').get().n
+      const total = db.prepare('SELECT COALESCE(SUM(totalTime), 0) AS n FROM AppModels').get().n
+      assert.ok(Math.abs(hours - total) < 0.001)
       db.close()
     })
     assert.deepEqual(errors, [])
-    await fs.writeFile(path.join(temporary, 'result.json'), JSON.stringify({ passed: 1, tests: ['Real main startup, title bar, close-to-tray, native recording and quit flush'] }, null, 2))
+    await fs.writeFile(path.join(temporary, 'result.json'), JSON.stringify({ passed: 1, tests: ['Real main startup, title bar, close-to-tray and consistent shutdown totals'] }, null, 2))
     app.quit()
   }
   catch (error) {

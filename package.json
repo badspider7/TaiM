@@ -22,7 +22,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "release:win": "node rebuild.js && vue-tsc --noEmit && vite build && electron-builder --win",
+    "release:win": "node rebuild.js && vue-tsc --noEmit && vite build && electron-builder --win --publish never",
     "rebuild": "node rebuild.js",
     "postinstall": "node rebuild.js",
     "lint": "eslint .",
@@ -31,7 +31,8 @@
     "commit": "commit",
     "typecheck": "vue-tsc --noEmit",
     "build": "pnpm typecheck && vite build",
-    "test": "node tests/run.mjs"
+    "test": "node tests/run.mjs",
+    "verify:release": "node scripts/verify-release.mjs"
   },
   "dependencies": {
     "@internationalized/date": "^3.5.5",
@@ -66,6 +67,7 @@
     "esbuild": "^0.21.5",
     "eslint": "^9.7.0",
     "husky": "^9.1.5",
+    "js-yaml": "^4.1.0",
     "lint-staged": "^15.2.9",
     "pinia": "^2.1.7",
     "sass": "^1.77.8",

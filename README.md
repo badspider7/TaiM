@@ -23,6 +23,13 @@
 - [x] 设置统计时间范围（详情页）
 - [x] 自定义分类、应用别名和历史明细
 - [x] JSON 备份恢复 / CSV 导出
+- [x] Windows 安装版更新检查、下载与重启安装、应用内更新日志
+
+## 下载使用
+
+前往 [GitHub Releases](https://github.com/badspider7/TaiM/releases) 下载 Windows x64 的 `TaiM-Windows-版本号-Setup.exe` 安装包。测试版尚未签名，Windows 可能提示未知发布者。安装版可在“设置 → 关于”检查更新。
+
+发布由 [Release CI](https://github.com/badspider7/TaiM/actions/workflows/release.yml) 自动构建：推送与 `package.json` 一致的 `v版本号` 标签，检查通过后自动创建 Release 并上传安装包、blockmap、更新元数据和 SHA256 校验文件。带 beta 的版本自动标为预发布。
 
 ## 本地运行
 
@@ -42,6 +49,8 @@ pnpm build      # 类型检查及生产构建
 pnpm test       # 先 build；使用独立临时数据库运行 Electron 集成测试
 pnpm release:win # 生成 Windows 安装包（需另外验证安装与自启动）
 ```
+
+更新行为、发布步骤与验证范围见 [自动更新说明](docs/updates.md)。
 
 ## 使用说明
 

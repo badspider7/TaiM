@@ -2,6 +2,7 @@ const defaultConfig: IConfig = {
   version: 1,
   common: {
     autoLaunch: false,
+    autoCheckUpdates: true,
     keepWindowSize: false,
     lang: 'zh-CN',
     theme: 'light',
@@ -16,6 +17,7 @@ export interface IConfig {
   version: number
   common: {
     autoLaunch: boolean
+    autoCheckUpdates: boolean
     keepWindowSize: boolean
     lang: string
     theme: string

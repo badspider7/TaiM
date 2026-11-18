@@ -13,6 +13,7 @@ export function validateConfig(value: unknown): IConfig {
   const v = value as IConfig
   if (!v || typeof v !== 'object' || !v.common || !v.actions
     || typeof v.common.autoLaunch !== 'boolean' || typeof v.common.keepWindowSize !== 'boolean'
+    || typeof v.common.autoCheckUpdates !== 'boolean'
     || !['light', 'dark', 'system'].includes(v.common.theme) || v.common.lang !== 'zh-CN'
     || !Number.isInteger(v.actions.idleMinutes) || v.actions.idleMinutes < 1 || v.actions.idleMinutes > 60
     || !Array.isArray(v.actions.ignoredApps) || v.actions.ignoredApps.length > 500

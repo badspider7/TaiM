@@ -2,13 +2,16 @@ name: Window Test
 
 on:
   push:
-    branches: [dev]
+    branches: [main, dev]
   pull_request:
-    branches: [dev]
+    branches: [main, dev]
 
 jobs:
   test:
     runs-on: windows-latest
+
+    env:
+      ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
 
     steps:
       - name: Checkout
@@ -17,22 +20,27 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10.33.0
 
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version: 21.2.0
+          node-version: '22'
           cache: pnpm
 
       - name: Install deps
-        run: pnpm i --frozen-lockfile
+        run: pnpm i --frozen-lockfile --ignore-scripts --registry=https://registry.npmjs.org
 
       - name: Install app deps
-        run: pnpm run postinstall
+        run: |
+          node node_modules/electron/install.js
+          pnpm run rebuild
 
       - name: Lint
         run: pnpm lint
 
-      - name: Release window
-        run: pnpm release:win
+      - name: Build
+        run: pnpm build
+
+      - name: Regression tests
+        run: pnpm test
