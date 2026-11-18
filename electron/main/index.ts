@@ -10,6 +10,7 @@ import { initDb } from '../db'
 import { getConfig } from '../config'
 import { setupUpdates } from '../update'
 import { cache } from '../utils/activeAppCache'
+import { refreshApplicationIcons } from '../utils/appIcons'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -151,6 +152,7 @@ ipcMain.on('open-url', (e, args) => {
 })
 app.whenReady().then(async () => {
   initDb()
+  await refreshApplicationIcons()
   await createWindow()
   setupHandle(win!)
   setupUpdates(win!, () => {

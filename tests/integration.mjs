@@ -65,6 +65,18 @@ async function run() {
       assert.equal(db.prepare('SELECT * FROM DailyLogModels WHERE appModelId = ?').get(id), undefined)
       assert.equal(db.prepare('SELECT totalTime FROM AppModels').get().totalTime, 60)
     })
+    await test('Large application icons replace existing low-resolution saved icons', async () => {
+      const { getApplicationIcon } = await import('../electron/utils/appIcons.ts')
+      const { nativeImage } = await import('electron')
+      const icon = await getApplicationIcon(process.execPath)
+      assert.ok(nativeImage.createFromDataURL(icon).getSize().width >= 32)
+      const rollback = new Error('rollback icon fixture')
+      assert.throws(() => db.transaction(() => {
+        write({ ...record, duration: 1, iconFile: icon })
+        assert.equal(db.prepare('SELECT iconFile FROM AppModels').get().iconFile, icon)
+        throw rollback
+      })(), error => error === rollback)
+    })
     await test('Invalid duration ignored and failed writes roll back all totals', () => {
       write({ ...record, duration: -300 })
       db.exec('CREATE TRIGGER fail_hour BEFORE UPDATE ON HoursLogModels BEGIN SELECT RAISE(ABORT, \'test\'); END')

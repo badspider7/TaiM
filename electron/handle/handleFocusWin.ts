@@ -14,6 +14,8 @@ export function executeMethodsInOrder(record: UsageRecord) {
       appModelDB.insertAppModel({ name: record.name, alias: '', description: record.actionDes, file: record.file, categoryId: 0, iconFile: record.iconFile, totalTime: 0 })
       model = appModelDB.getAppModel(record.name)!
     }
+    if (record.iconFile && record.iconFile !== model.iconFile)
+      getDB().prepare('UPDATE AppModels SET iconFile = ? WHERE id = ?').run(record.iconFile, model.id)
     appModelDB.updateTotalTime(record.name, model.totalTime + record.duration)
     const appModelId = model.id!
     const hoursTime = `${record.startTime.slice(0, 13)}:00:00`

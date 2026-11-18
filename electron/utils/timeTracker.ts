@@ -1,16 +1,16 @@
 import { activeWindow } from 'get-windows'
-import { app, powerMonitor } from 'electron'
+import { powerMonitor } from 'electron'
 import { ignoreNameList } from '../const/const'
 import { getConfig } from '../config'
 import logger from '../logger'
 import { cache } from './activeAppCache'
 import { splitInterval } from './usage'
 import { isSelfApp } from './selfApp'
+import { getApplicationIcon } from './appIcons'
 
 export class TimeTracker {
   private timer?: NodeJS.Timeout
   private current?: { name: string, file: string, iconFile: string, actionDes: string, since: number }
-  private icons = new Map<string, string>()
   private pending = false
   private suspended = false
   private generation = 0
@@ -82,19 +82,11 @@ export class TimeTracker {
         || (/explorer\.exe$/i.test(file) && !info.title)) {
         return
       }
-      let iconFile = this.icons.get(file)
-      if (iconFile === undefined) {
-        try {
-          iconFile = (await app.getFileIcon(file, { size: 'small',
-          })).toDataURL()
-        }
-        catch {
-          iconFile = ''
-        }
-        if (this.icons.size >= 256)
-          this.icons.delete(this.icons.keys().next().value!)
-        this.icons.set(file, iconFile)
+      let iconFile = ''
+      try {
+        iconFile = await getApplicationIcon(file)
       }
+      catch { /* Applications without icons still count toward usage. */ }
       if (generation !== this.generation || !this.timer)
         return
       this.current = { name, file, iconFile, actionDes: info.title, since: this.now(),

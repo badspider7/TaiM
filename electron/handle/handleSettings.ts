@@ -7,6 +7,7 @@ import { type Backup, csvCell, validateBackup } from '../db/backup'
 import tracker from '../utils/timeTracker'
 import { cache } from '../utils/activeAppCache'
 import { excludeSelfHistory } from '../db/excludeSelf'
+import { refreshApplicationIcons } from '../utils/appIcons'
 
 export function flushUsage() {
   tracker.checkpoint()
@@ -109,6 +110,7 @@ export function setupSettings(win: BrowserWindow) {
           UPDATE AppModels SET totalTime = COALESCE((SELECT SUM(time) FROM HoursLogModels WHERE appModelId = AppModels.id), 0);`)
         excludeSelfHistory()
       })()
+      await refreshApplicationIcons()
       return { backupPath,
       }
     }
