@@ -1,6 +1,19 @@
 // Keep the local history available even when the update server cannot be reached.
 export const releaseHistory = [
   {
+    version: '0.0.1-beta.3',
+    date: '2026-11-18',
+    title: '网站计时与界面统一',
+    notes: [
+      '新增 Chrome / Edge 前台网站计时，按页面标题、具体网址或域名查看记录。',
+      '新增网站日期筛选、搜索、CSV 导出、JSON 备份恢复及记录清空。',
+      '新增独立使用说明、通用浏览器扩展下载包与本机配对；安装说明移出记录页。',
+      '统一应用详情、分类、网站、主题与应用建议列表的下拉样式，适配浅色和深色主题。',
+      '修复应用图标模糊，启动时刷新大尺寸图标缓存。',
+      '自动排除 TaiM 自身统计，清理历史误计记录。',
+    ],
+  },
+  {
     version: '0.0.1-beta.2',
     date: '2026-11-18',
     title: '首个公开测试版',
