@@ -1,6 +1,18 @@
 // Keep the local history available even when the update server cannot be reached.
 export const releaseHistory = [
   {
+    version: '0.0.1-beta.4',
+    date: '2026-11-19',
+    title: '桌面体验与后台更新',
+    notes: [
+      '统一导航、卡片、表格和设置布局，改进浅色、深色主题及窄窗口显示。',
+      '概览和统计按秒、分钟或小时显示时长，并用实际时长差表示变化。',
+      '应用和网站页增加常用日期快捷查询，网站 CSV 按已查询的日期范围导出。',
+      '统计图表适配主题，支持点击柱形或使用下拉框查看时段明细。',
+      'Windows 安装版发现新版后在后台下载，完成后提示重启安装。应用内只展示最新一条更新日志。',
+    ],
+  },
+  {
     version: '0.0.1-beta.3',
     date: '2026-11-18',
     title: '网站计时与界面统一',
