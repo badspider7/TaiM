@@ -2,9 +2,26 @@
 @use "./variables.scss";
 
 body { background: hsl(var(--background)); color: hsl(var(--foreground)); }
-.page-scroll { overflow-y: auto; padding-bottom: 24px; }
+.page-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+.page-heading h1 { font-size: 26px; line-height: 1.25; font-weight: 650; }
+.page-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.surface { min-width: 0; border: 1px solid hsl(var(--border)); border-radius: var(--radius); background: hsl(var(--card)); }
+.filter-panel { padding: 12px 14px; display: grid; gap: 10px; }
+.filter-panel .toolbar { margin: 0; }
+.table-surface { overflow: auto; }
+.search-field { position: relative; min-width: 0; max-width: 320px; flex: 1 1 220px; }
+.search-field svg { position: absolute; top: 50%; left: 10px; transform: translateY(-50%); color: hsl(var(--muted-foreground)); pointer-events: none; }
+.search-field input[type=search] { width: 100%; padding-left: 34px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 999px; padding: 4px 9px; font-size: 12px; font-weight: 600; background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground)); }
+.pill-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.pill[data-tone=connected] { background: hsl(145 60% 40% / 0.15); color: hsl(145 70% 25%); }
+.dark .pill[data-tone=connected] { color: hsl(145 58% 70%); }
+.pill[data-tone=error] { background: hsl(var(--primary) / 0.1); color: hsl(var(--danger-text)); }
+.section-title { font-size: 15px; font-weight: 600; }
 .settings-panel { max-width: 800px; padding-bottom: 24px; }
-.settings-panel h2 { font-weight: 600; }
+.settings-card { padding: 16px; margin-bottom: 12px; }
+.settings-card h2 { font-size: 15px; font-weight: 600; }
+.settings-card .option-row:last-child { border-bottom: 0; padding-bottom: 0; }
 .option-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid hsl(var(--border)); }
 .toolbar { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
 input:not([type=checkbox]) { padding: 7px 10px; border: 1px solid hsl(var(--border)); border-radius: 6px; background: hsl(var(--background)); color: hsl(var(--foreground)); max-width: 100%; }
@@ -14,16 +31,15 @@ input[type=checkbox] { accent-color: hsl(var(--primary)); width: 18px; height: 1
 .action-button:hover { background: hsl(var(--accent)); }
 button:disabled { opacity: .5; cursor: not-allowed; }
 button:not([data-slot=select-trigger]):focus-visible, input:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; }
-.error-message { color: #e11d48; font-size: 14px; margin-top: 12px; }
+.error-message { color: hsl(var(--danger-text)); font-size: 14px; margin: 12px 0; }
 .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-.data-table th, .data-table td { padding: 12px 8px; border-bottom: 1px solid hsl(var(--border)); }
+.data-table th, .data-table td { padding: 11px 14px; border-bottom: 1px solid hsl(var(--border)); }
+.data-table th { background: hsl(var(--muted)); color: hsl(var(--muted-foreground)); font-weight: 600; white-space: nowrap; }
+.data-table tbody tr:last-child td { border-bottom: 0; }
 .data-table tbody tr:hover { background: hsl(var(--accent)); }
-.dark { --font-color: #ededed; color-scheme: dark; }
-.dark .header-wrapper, .dark .side-bar, .dark .app-icon { background-color: hsl(var(--card)); }
-.dark .text-gray-600 { color: hsl(var(--foreground)); }
-.dark .display-content, .dark .chart-element { border-color: hsl(var(--border)); }
+.dark { color-scheme: dark; }
+:root { --danger-text: 348 78% 34%; }
+.dark { --danger-text: 351 94% 77%; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
-
-.dark .sidebar-icon path { fill: currentColor; }
 
 input, textarea { user-select: text; }

@@ -1,32 +1,33 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { useUpdates } from '@/store/updates'
+import { Button } from '@/components/ui/button'
 
 const updates = useUpdates()
-const router = useRouter()
 const dismissed = ref('')
-const visible = computed(() => ['available', 'downloaded'].includes(updates.state.phase)
-  && dismissed.value !== `${updates.state.availableVersion}/${updates.state.phase}`)
-function dismiss() {
-  dismissed.value = `${updates.state.availableVersion}/${updates.state.phase}`
-}
+const installFailed = computed(() => updates.state.phase === 'error' && updates.state.failedStage === 'install')
+const visible = computed(() => (updates.state.phase === 'downloaded' || installFailed.value)
+  && dismissed.value !== updates.state.availableVersion)
 </script>
 
 <template>
-  <aside v-if="visible" class="update-notice" role="status">
-    <div>
-      <strong>{{ updates.state.phase === 'downloaded' ? '更新已准备就绪' : '发现新版本' }}</strong>
-      <p class="text-sm text-muted-foreground">
-        TaiM {{ updates.state.availableVersion }}
-      </p>
+  <aside class="update-notice" :class="{ 'notice-visible': visible }" aria-label="软件更新">
+    <div role="status">
+      <template v-if="visible">
+        <strong>{{ installFailed ? '安装更新失败' : '更新已准备就绪' }}</strong>
+        <p class="text-sm text-muted-foreground">
+          {{ installFailed ? updates.state.message : `TaiM ${updates.state.availableVersion} 已下载。安装时会保存统计数据并重启。` }}
+        </p>
+      </template>
     </div>
-    <button class="action-button" @click="router.push('/setting?tab=about')">
-      查看更新
-    </button>
-    <button class="action-button" aria-label="暂时关闭更新提示" @click="dismiss">
-      稍后
-    </button>
+    <div v-if="visible" class="flex flex-wrap justify-end gap-2">
+      <Button variant="outline" @click="dismissed = updates.state.availableVersion">
+        稍后
+      </Button>
+      <Button @click="updates.command('updater:install')">
+        {{ installFailed ? '重试安装' : '重启并安装' }}
+      </Button>
+    </div>
   </aside>
 </template>
 
@@ -36,8 +37,11 @@ function dismiss() {
   right: 24px;
   bottom: 24px;
   z-index: 50;
+  max-width: min(26rem, calc(100% - 48px));
+}
+.notice-visible {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 12px;
   padding: 16px;
   border: 1px solid hsl(var(--border));

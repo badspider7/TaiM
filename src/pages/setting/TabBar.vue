@@ -1,18 +1,11 @@
 <script setup lang='ts'>
-import { ref, shallowRef, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import Data from './components/Data.vue'
 import Common from './components/Common.vue'
 import Behavior from './components/Behavior.vue'
 import About from './components/About.vue'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-
-enum TabType {
-  data = 'data',
-  common = 'common',
-  behavior = 'behavior',
-  about = 'about',
-}
 
 const comMap = {
   data: Data,
@@ -21,17 +14,17 @@ const comMap = {
   about: About,
 }
 const route = useRoute()
-const activeTab = ref('common')
-const acitveCom = shallowRef(Common)
+const router = useRouter()
+type SettingsTab = keyof typeof comMap
+function isTab(value: unknown): value is SettingsTab {
+  return typeof value === 'string' && Object.hasOwn(comMap, value)
+}
+const activeTab = computed<SettingsTab>(() => isTab(route.query.tab) ? route.query.tab : 'common')
 
 function tabChange(input: string | number) {
-  const value = String(input) as keyof typeof TabType
-  if (!(value in comMap))
-    return
-  activeTab.value = value
-  acitveCom.value = comMap[value]
+  if (isTab(input) && input !== activeTab.value)
+    void router.replace({ query: { ...route.query, tab: input } })
 }
-watch(() => route.query.tab, value => tabChange(typeof value === 'string' ? value : 'common'), { immediate: true })
 </script>
 
 <template>
@@ -50,8 +43,8 @@ watch(() => route.query.tab, value => tabChange(typeof value === 'string' ? valu
         关于
       </TabsTrigger>
     </TabsList>
-    <div class="setteing-container mt-5">
-      <component :is="acitveCom" />
+    <div class="mt-4">
+      <component :is="comMap[activeTab]" />
     </div>
   </Tabs>
 </template>

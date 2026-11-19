@@ -36,16 +36,16 @@ function closeHandler() {
       </div>
     </div>
     <div class="header-right">
-      <div class="minimize  hover:bg-shallow-gray rounded" @click="minimizeHandler">
+      <button type="button" class="window-control" aria-label="最小化" @click="minimizeHandler">
         <Subtract16Regular />
-      </div>
-      <div class="maxmzie  hover:bg-shallow-gray rounded" @click="maxmizeHandler">
+      </button>
+      <button type="button" class="window-control" :aria-label="isMaxmize ? '还原窗口' : '最大化'" @click="maxmizeHandler">
         <Maximize16Regular v-if="!isMaxmize" />
         <CopySelect20Regular v-else />
-      </div>
-      <div class="hide-window  hover:bg-shallow-gray rounded" @click="closeHandler">
+      </button>
+      <button type="button" class="window-control" aria-label="关闭窗口" @click="closeHandler">
         <Dismiss16Regular />
-      </div>
+      </button>
     </div>
   </div>
 </template>
@@ -56,21 +56,23 @@ function closeHandler() {
     justify-content: space-between;
     position: relative;
     width: 100%;
-    height: 40px;
-    background-color: #fff;
-    // border-bottom: 1px solid #eee;
+    flex: 0 0 44px;
+    padding-inline: 12px;
+    border-bottom: 1px solid hsl(var(--border));
+    background-color: hsl(var(--card));
+    user-select: none;
     -webkit-app-region: drag;
     .header-left{
       display: flex;
-      align-items: flex-end;
-      color: var(--font-color);
-      padding: 5px;
+      align-items: center;
+      gap: 4px;
       .header-logo{
         width: 24px;
         height: 24px;
       }
       .header-title{
-       font-size: var(--font-14);
+       font-family: Questrial, sans-serif;
+       font-size: 16px;
       }
     }
 
@@ -80,9 +82,17 @@ function closeHandler() {
     gap: 10px;
      z-index: 1;
      -webkit-app-region: no-drag;
-    .minimize,.maxmzie,.hide-window{
+    .window-control{
       width:30px;
       height: 30px;
+      border-radius: calc(var(--radius) - 4px);
+      &:hover {
+        background-color: hsl(var(--accent));
+        color: hsl(var(--accent-foreground));
+      }
+      &:focus-visible {
+        outline-offset: -2px;
+      }
       svg{
         width: 16px;
         height: 100%;

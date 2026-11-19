@@ -3,6 +3,7 @@ import type { AppData, DailyLogModels } from '@@/type/types'
 import { computed, onMounted, onUnmounted, ref, shallowRef } from 'vue'
 import * as echarts from '@/lib/charts'
 import CardGroup from '@/components/CardGroup.vue'
+import AppSelect from '@/components/AppSelect.vue'
 import AppList from '@/pages/overview/FrequentApp.vue'
 import AppDetail from '@/components/AppDetail.vue'
 import { useAppDetail } from '@/hooks/useAppDetail'
@@ -20,84 +21,111 @@ const props = defineProps<{
 
 const store = useActiveTab()
 
-onMounted(() => {
-  refreshChart()
-})
-
 const chart = shallowRef<echarts.ECharts>()
+const chartElement = ref<HTMLElement>()
+let lastOptions: echarts.EChartsCoreOption | undefined
 const activeIndex = ref<null | number>(null)
+const periods = ref<{ value: string, label: string }[]>([])
 const appDetailInfo = ref<AppData[]>([])
 const isShowAppDetailPage = ref(false)
+const detailLoading = ref(false)
+const detailError = ref(false)
+let detailRequest = 0
 
-function initChart(options: echarts.EChartsCoreOption) {
-  if (!chart.value) {
-    chart.value = echarts.init(document.querySelector('.chart-element') as HTMLElement)
-  }
-
-  // TODO: 到时候优化一下
-  chart.value && chart.value.setOption(options)
-  chart.value.resize()
-  isShowAppDetailPage.value = false
-  appDetailInfo.value = []
-  activeIndex.value = null
-  updateChartGraphic(chart.value, 0, 0, 0, 0, false) // 隐藏矩形
-  chart.value.getZr().off('click')
-  chart.value.getZr().on('click', params => chartClickCallback(params, chart.value))
+function applyChartTheme() {
+  if (!chart.value || !chartElement.value || !lastOptions)
+    return
+  const styles = getComputedStyle(chartElement.value)
+  const color = (token: string, opacity = 1) => `hsla(${styles.getPropertyValue(token).trim().split(/\s+/).join(', ')}, ${opacity})`
+  const guides = Array.isArray(lastOptions.series) ? lastOptions.series[0]?.markLine?.data ?? [] : []
+  chart.value.setOption({
+    xAxis: [{ axisLabel: { color: color('--muted-foreground') } }],
+    yAxis: [{ axisLabel: { color: color('--muted-foreground') } }],
+    tooltip: {
+      backgroundColor: color('--popover'),
+      borderColor: color('--border'),
+      textStyle: { color: color('--popover-foreground') },
+      axisPointer: { shadowStyle: { color: color('--primary', 0.10) } },
+    },
+    series: [{
+      itemStyle: { color: color('--primary', 0.74), borderRadius: [3, 3, 0, 0] },
+      markLine: {
+        data: guides.map((guide: { type?: string, label?: object, lineStyle?: object }) => ({
+          ...guide,
+          label: { ...guide.label, color: color(guide.type === 'average' ? '--danger-text' : '--muted-foreground') },
+          lineStyle: { ...guide.lineStyle, color: color(guide.type === 'average' ? '--primary' : '--muted-foreground', 0.55) },
+        })),
+      },
+    }],
+  })
 }
 
-const RECT_ID = 2
-const RECT_FILL_COLOR = '#FDECF0'
+function initChart(options: echarts.EChartsCoreOption) {
+  if (!chartElement.value)
+    return
+  chart.value ??= echarts.init(chartElement.value)
+  lastOptions = options
+  const labels = Array.isArray(options.xAxis) ? options.xAxis[0]?.data ?? [] : []
+  periods.value = labels.map((label: string | number, index: number) => ({
+    value: String(index),
+    label: store.activeTab === ACTIVE_TAB_TYPE.DAY ? `${String(label).padStart(2, '0')}:00` : String(label),
+  }))
+  chart.value.setOption(options)
+  applyChartTheme()
+  chart.value.resize()
+  clearSelection()
+  chart.value.getZr().off('click')
+  chart.value.getZr().on('click', (params) => {
+    const point = [params.offsetX, params.offsetY]
+    if (!chart.value?.containPixel('grid', point))
+      return
+    const bucket = chart.value.convertFromPixel({ seriesIndex: 0 }, point)
+    const index = Number(Array.isArray(bucket) ? bucket[0] : bucket)
+    if (index === activeIndex.value)
+      clearSelection()
+    else
+      void selectPeriod(String(index))
+  })
+}
+
 const selectedHours = ref('')
 const selectedDay = ref('')
 const selectedMonth = ref('')
 
-function updateChartGraphic(chart: any, x: number, y: number, width: number, height: number, show: boolean) {
-  chart.setOption({
-    graphic: {
-      type: 'rect',
-      id: RECT_ID,
-      $action: 'merge',
-      shape: {
-        x,
-        y,
-        width,
-        height: show ? height : 0, // 根据是否显示来调整高度
-      },
-      style: {
-        fill: RECT_FILL_COLOR,
-      },
-      z: 10,
-    },
-
-  })
+function clearSelection() {
+  detailRequest++
+  detailLoading.value = false
+  detailError.value = false
+  isShowAppDetailPage.value = false
+  appDetailInfo.value = []
+  activeIndex.value = null
+  chart.value?.dispatchAction({ type: 'downplay', seriesIndex: 0 })
 }
 
-function chartClickCallback(params: any, chart: any): void {
-  if (!params || !chart)
+async function selectPeriod(value: string) {
+  if (!periods.value.some(period => period.value === value))
     return
 
-  const pointInPixel = [params.offsetX, params.offsetY]
-  if (chart.containPixel('grid', pointInPixel)) {
-    const xIndex = chart.convertFromPixel({ seriesIndex: 0 }, pointInPixel)[0]
-    if (xIndex === activeIndex.value) {
-      isShowAppDetailPage.value = false
-      updateChartGraphic(chart, 0, 0, 0, 0, false) // 隐藏矩形
-      appDetailInfo.value = []
-      activeIndex.value = null
-    }
-    else {
-      isShowAppDetailPage.value = true
-      getAppDetail(xIndex).then((res) => {
-        if (res) {
-          appDetailInfo.value = res
-        }
-      })
-      // 假设 params.topTarget 是有效的，并且包含我们需要的 shape 属性
-      if (params.topTarget && params.topTarget.shape) {
-        updateChartGraphic(chart, params.topTarget.shape.x, params.topTarget.shape.y, params.topTarget.shape.width, params.topTarget.shape.height, true)
-      }
-      activeIndex.value = xIndex
-    }
+  const index = Number(value)
+  chart.value?.dispatchAction({ type: 'downplay', seriesIndex: 0 })
+  chart.value?.dispatchAction({ type: 'highlight', seriesIndex: 0, dataIndex: index })
+  isShowAppDetailPage.value = true
+  activeIndex.value = index
+  detailLoading.value = true
+  detailError.value = false
+  const request = ++detailRequest
+  try {
+    const apps = await getAppDetail(index)
+    if (request === detailRequest)
+      appDetailInfo.value = apps ?? []
+  }
+  catch {
+    if (request === detailRequest)
+      detailError.value = true
+  }
+  finally {
+    if (request === detailRequest)
+      detailLoading.value = false
   }
 }
 
@@ -189,11 +217,17 @@ const displayTime = computed(() => {
 })
 
 const resize = () => chart.value?.resize()
-function refreshChart() {
-  window.ipcRenderer.on('refresh-chart', resize)
-}
+const sizeObserver = new ResizeObserver(resize)
+const themeObserver = new MutationObserver(applyChartTheme)
+onMounted(() => {
+  if (chartElement.value)
+    sizeObserver.observe(chartElement.value)
+  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+})
 onUnmounted(() => {
-  window.ipcRenderer.off('refresh-chart', resize)
+  detailRequest++
+  sizeObserver.disconnect()
+  themeObserver.disconnect()
   chart.value?.dispose()
 })
 
@@ -204,24 +238,34 @@ defineExpose({
 
 <template>
   <CardGroup :current-app-info="currentAppInfo" :last-app-info="lastAppInfo" />
-  <div class="app-detail mt-5">
-    <div class="chart-element" />
-    <AppDetail v-if="isShowAppDetailPage" :app-data="appDetailInfo" :date="displayTime" />
+  <section class="surface mt-4 p-4" aria-label="使用趋势">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h2 class="section-title">
+        使用趋势
+      </h2>
+      <AppSelect v-if="periods.length" :model-value="activeIndex === null ? '' : String(activeIndex)" :options="periods" label="选择时段查看应用明细" placeholder="查看时段明细" @update:model-value="selectPeriod" />
+    </div>
+    <div ref="chartElement" class="chart-element" />
+  </section>
+  <div class="surface mt-4 p-4">
+    <button v-if="isShowAppDetailPage" class="action-button" @click="clearSelection">
+      返回使用时长排行
+    </button>
+    <p v-if="detailLoading" class="text-muted-foreground mt-3" role="status">
+      正在读取时段明细…
+    </p>
+    <p v-else-if="detailError" class="error-message" role="alert">
+      读取时段明细失败，请重新选择时段。
+    </p>
+    <AppDetail v-else-if="isShowAppDetailPage" :app-data="appDetailInfo" :date="displayTime" />
     <AppList v-else :app-data="currentAppInfo" />
   </div>
 </template>
 
 <style lang="scss" scoped>
-.app-detail{
-  flex: 1;
-  overflow: hidden auto;
-}
-
 .chart-element{
   width: 100%;
-  height: 250px;
-  border-left: 1px solid #e0e0e0;
-  border-bottom: 1px solid #e0e0e0;
+  height: clamp(230px, 34vh, 320px);
   margin-top: 10px;
 }
 </style>

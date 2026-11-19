@@ -1,141 +1,34 @@
-<script setup lang='ts'>
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+<script setup lang="ts">
+import { computed } from 'vue'
 import type { AppData } from '@@/type/types'
-import { Progress } from '@/components/ui/progress'
-import { Time } from '@/utils/timerEvent'
+import AppUsageRow from '@/components/AppUsageRow.vue'
 import NoData from '@/components/NoData.vue'
 
-const props = defineProps({
-  appData: {
-    type: Array as () => AppData[],
-    default: () => [],
-    required: true,
-  },
+const props = defineProps<{ appData: AppData[] }>()
+
+const topApps = computed(() => {
+  const totals = new Map<number, AppData>()
+  for (const app of props.appData) {
+    const existing = totals.get(app.id!)
+    if (existing)
+      existing.totalTime += app.totalTime
+    else
+      totals.set(app.id!, { ...app })
+  }
+  return [...totals.values()].sort((a, b) => b.totalTime - a.totalTime).slice(0, 5)
 })
-
-const router = useRouter()
-const iconErrors = ref(new Set<string>())
-
-// 最为频繁的，默认是前五个
-const frequentlyApp = computed(() => {
-  const tempAppInfo = [...props.appData]
-  const mergeItems = tempAppInfo.reduce((acc, item) => {
-    if (acc[item.id!]) {
-      acc[item.id!].totalTime += item.totalTime
-    }
-    else {
-      acc[item.id!] = { ...item }
-    }
-    return acc
-  }, {} as Record<number, AppData>)
-
-  const appInfoArray: AppData[] = Object.values(mergeItems)
-  return appInfoArray.sort((a, b) => b.totalTime - a.totalTime).slice(0, 5)
-})
-
-function formatTime(second: number) {
-  return Time.toString(second)
-}
-
-// 计算宽度
-function getProgressWidth(second: number) {
-  const first = frequentlyApp.value[0]?.totalTime || 1
-  const rate = `${Math.floor((second / first) * 100)}%`
-  return rate
-}
-
-function viewDetail(id: number | undefined) {
-  void router.push({ path: '/detail', query: { app: String(id) } })
-}
 </script>
 
 <template>
-  <div class="frequent-app-list-wrap">
-    <div class="title text-gray-400 text-base">
-      最为频繁
-    </div>
-    <div v-if="frequentlyApp.length > 0" class="app-list">
-      <div v-for="item in frequentlyApp" :key="item.id" class="app-info" @click="viewDetail(item.id)">
-        <div class="app-icon">
-          <img v-if="item.iconFile && !iconErrors.has(item.iconFile)" :src="item.iconFile" alt="" class="w-5 h-5" @error="iconErrors.add(item.iconFile)">
-          <span v-else class="text-muted-foreground">{{ (item.alias || item.name).slice(0, 1) }}</span>
-        </div>
-        <div class="show-data">
-          <div class="app-name text-gray-600">
-            {{ item.alias || item.name }}
-          </div>
-          <Progress :model-value="100" class="progress " :style="{ width: getProgressWidth(item.totalTime) }" />
-        </div>
-        <div class="usage-time">
-          {{ formatTime(item.totalTime) }}
-        </div>
-      </div>
-    </div>
-    <NoData v-else />
-  </div>
+  <section aria-label="使用时长排行">
+    <h2 class="section-title mb-2">
+      使用时长排行
+    </h2>
+    <ul v-if="topApps.length">
+      <li v-for="app in topApps" :key="app.id">
+        <AppUsageRow :app="app" :max-time="topApps[0].totalTime" />
+      </li>
+    </ul>
+    <NoData v-else title="暂无使用记录" description="开始使用其他应用后，TaiM 会在后台记录活跃时间。" />
+  </section>
 </template>
-
-<style lang="scss" scoped>
-.frequent-app-list-wrap{
-    display: flex;
-    flex-direction: column;
-    // height: calc(100% - 145px);
-    margin-top: 16px;
-}
-
-.app-list{
-    flex: 1;
-    overflow: hidden auto;
-}
-.app-info{
-    display: flex;
-    align-items:center;
-    margin: 20px 0;
-    .app-icon{
-        width: 50px;
-        height: 50px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: #f0f0f0;
-        margin-right: 16px;
-        border-radius: 4px;
-        border: 2px solid transparent;
-    }
-    .show-data{
-        flex:1;
-        .progress{
-            height: 12px;
-            // background-color: transparent;
-        }
-       :deep(.bg-primary){
-            background-color: #cfcfcf !important;
-        }
-    }
-    .usage-time{
-        width: 125px;
-        font-size: 14px;
-        align-self: end;
-        margin-left: 10px;
-    }
-}
-
-.app-info:hover{
-    cursor: pointer;
-  .app-icon{
-    // box-shadow: 3px 2px 3px 0px #cccc;
-    border: 2px solid rgb(248, 20, 61);
-    transition: all 1s ease-out;
-  }
-  .app-name{
-    color:rgb(248, 20, 61)
-  }
-  :deep(.bg-primary){
-    background-color: rgb(233, 56, 88) !important;
-  }
-   .usage-time{
-    color: rgb(248, 20, 61)
-   }
-}
-</style>

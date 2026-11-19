@@ -1,20 +1,11 @@
 <script setup lang='ts'>
 import Tab from './Tab.vue'
+import PageHeading from '@/components/layout/PageHeading.vue'
 </script>
 
 <template>
-  <div class="statistic-wrap">
-    <div class="title font-middle text-lg">
-      统计
-    </div>
-    <div class="app-body mt-5">
-      <Tab />
-    </div>
+  <div>
+    <PageHeading title="统计" />
+    <Tab />
   </div>
 </template>
-
-<style lang="scss" scoped>
-.app-body{
-  height: calc(100% - 50px);
-}
-</style>

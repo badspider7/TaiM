@@ -32,6 +32,15 @@ export async function chooseSelect(js, label, text) {
   await waitFor(js, '!document.querySelector(\'[role="listbox"]\')')
 }
 
+function contrast(foreground, background) {
+  const luminance = rgb => rgb.match(/\d+/g).slice(0, 3).map(Number)
+    .map(value => value / 255)
+    .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+    .reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0)
+  const [lighter, darker] = [luminance(foreground), luminance(background)].sort((a, b) => b - a)
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
 export async function testSelects(test, { win, js, invoke, waitText, temporary }) {
   await test('Statistics period selectors switch weeks, months and years through component menus', async () => {
     await js('location.hash = \'#/statistics\'')
@@ -69,7 +78,7 @@ export async function testSelects(test, { win, js, invoke, waitText, temporary }
     const names = Array.from({ length: 24 }, (_, i) => `菜单测试 ${String(i).padStart(2, '0')}`)
     for (const name of names) await invoke('categories:save', null, name)
     await js('location.hash = \'#/\'')
-    await waitText('最为频繁')
+    await waitText('使用时长排行')
     await js('location.hash = \'#/detail\'')
     await waitText('查询 / 刷新')
     for (const theme of ['light', 'dark']) {
@@ -90,14 +99,59 @@ export async function testSelects(test, { win, js, invoke, waitText, temporary }
     const categories = await invoke('categories:list')
     for (const c of categories.filter(c => names.includes(c.name))) await invoke('categories:delete', c.id)
   })
-  await test('Theme select saves immediately and ignored-app suggestions support custom input', async () => {
+  await test('Switching themes keeps navigation and window controls legible on hover and focus', async () => {
     await js('location.hash = \'#/setting?tab=common\'')
     await waitText('记住窗口大小')
-    await chooseSelect(js, '主题', '浅色')
-    await waitFor(js, '!document.documentElement.classList.contains(\'dark\')')
-    assert.equal((await invoke('settings:get')).config.common.theme, 'light')
-    await chooseSelect(js, '主题', '深色')
-    await waitFor(js, 'document.documentElement.classList.contains(\'dark\')')
+    const rememberSize = (await invoke('settings:get')).config.common.keepWindowSize
+    for (const expected of [!rememberSize, rememberSize]) {
+      await js('document.getElementById(\'remember-window\').click()')
+      await waitFor(js, `document.getElementById('remember-window').getAttribute('aria-checked') === '${expected}' && !document.getElementById('remember-window').disabled`)
+      assert.equal((await invoke('settings:get')).config.common.keepWindowSize, expected)
+    }
+    const debuggerClient = win.webContents.debugger
+    debuggerClient.attach('1.3')
+    try {
+      await debuggerClient.sendCommand('DOM.enable')
+      await debuggerClient.sendCommand('CSS.enable')
+      const { root } = await debuggerClient.sendCommand('DOM.getDocument')
+      for (const selector of ['.sidebar-link[href="#/statistics"]', '.window-control']) {
+        const { nodeId } = await debuggerClient.sendCommand('DOM.querySelector', { nodeId: root.nodeId, selector })
+        await debuggerClient.sendCommand('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: ['hover', 'focus-visible'] })
+      }
+      for (const [theme, label] of [['light', '浅色'], ['dark', '深色']]) {
+        await chooseSelect(js, '主题', label)
+        await waitFor(js, `document.documentElement.classList.contains('dark') === ${theme === 'dark'}`)
+        assert.equal((await invoke('settings:get')).config.common.theme, theme)
+        const [sidebar, windowControl] = await js(`['.sidebar-link[href="#/statistics"]', '.window-control'].map(selector => {
+          const control = document.querySelector(selector);
+          const { backgroundColor, color, outlineStyle } = getComputedStyle(control);
+          return { backgroundColor, color, outlineStyle, fill: getComputedStyle(control.querySelector('svg path, svg rect')).fill };
+        })`)
+        for (const item of [sidebar, windowControl]) {
+          assert.equal(item.backgroundColor.startsWith('rgb('), true)
+          assert.ok(contrast(item.color, item.backgroundColor) >= 4.5)
+          assert.equal(item.outlineStyle, 'solid')
+          assert.equal(item.fill, item.color)
+        }
+        const navigation = await js(`(() => {
+          const active = document.querySelector('.sidebar-link.is-active');
+          const website = document.querySelector('.sidebar-link[href="#/websites"] svg');
+          return { selected: active.textContent.trim(), selectedFill: getComputedStyle(active.querySelector('path')).fill, selectedColor: getComputedStyle(active).color, selectedBackground: getComputedStyle(active).backgroundColor, websiteFill: getComputedStyle(website).fill, websiteStroke: getComputedStyle(website).stroke, websiteColor: getComputedStyle(website).color };
+        })()`)
+        assert.equal(navigation.selected, '设置')
+        assert.equal(navigation.selectedFill, navigation.selectedColor)
+        assert.notEqual(navigation.selectedBackground, sidebar.backgroundColor)
+        assert.equal(navigation.websiteFill, 'none')
+        assert.equal(navigation.websiteStroke, navigation.websiteColor)
+        await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+        await fs.writeFile(path.join(temporary, `navigation-${theme}.png`), (await win.webContents.capturePage()).toPNG())
+      }
+    }
+    finally {
+      debuggerClient.detach()
+    }
+  })
+  await test('Ignored-app suggestions support custom input', async () => {
     await js('location.hash = \'#/setting?tab=behavior\'')
     await waitText('忽略应用')
     await js('(() => { const input = document.querySelector(\'[aria-label="忽略应用"]\'); input.focus(); input.value = \'Editor\'; input.dispatchEvent(new Event(\'input\', { bubbles: true })); })()')

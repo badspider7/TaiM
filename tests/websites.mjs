@@ -229,8 +229,19 @@ export async function testWebsites(test, { temporary, win, invoke, js, waitText 
     await fs.writeFile(path.join(temporary, 'websites.png'), (await win.webContents.capturePage()).toPNG())
     const exportPath = path.join(temporary, 'websites.csv')
     dialog.showSaveDialog = async () => ({ canceled: false, filePath: exportPath })
-    await invoke('websites:export', '2026-11-18', '2026-11-18')
+    await js(`(() => {
+      const field = document.querySelector('[aria-label="网站开始日期"]');
+      field.value = '2026-11-19';
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      [...document.querySelectorAll('button')].find(button => button.textContent.trim() === '导出日期范围 CSV').click();
+    })()`)
+    await waitText('已导出')
     assert.ok((await fs.readFile(exportPath, 'utf8')).includes('https://example.test/a?lesson=1'))
+    await js(`(() => {
+      const field = document.querySelector('[aria-label="网站开始日期"]');
+      field.value = '2026-11-18';
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+    })()`)
   })
   await test('Website titles use the latest nonempty hourly title and render remote markup as plain text', async () => {
     const insert = db.prepare('INSERT INTO WebsiteHours(browser, url, domain, title, hoursTime, time) VALUES (?, ?, ?, ?, ?, ?)')

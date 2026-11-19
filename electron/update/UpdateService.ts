@@ -10,8 +10,8 @@ interface Options {
   logError: (error: unknown) => void
 }
 
-export function releaseNotesText(notes: UpdateInfo['releaseNotes']): string {
-  const text = Array.isArray(notes) ? notes.map(n => `${n.version}\n${n.note ?? ''}`).join('\n\n') : notes ?? ''
+export function releaseNotesText(notes: UpdateInfo['releaseNotes'], version: string): string {
+  const text = (Array.isArray(notes) ? notes.find(note => note.version === version)?.note : notes) ?? ''
   // GitHub can return HTML. Render only text in the UI, never executable markup.
   return text.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(?:p|div|li|h[1-6])>/gi, '\n')
     .replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
@@ -56,7 +56,7 @@ export class UpdateService {
     // Beta builds can receive beta and stable releases; stable builds stay on stable.
     client.allowPrerelease = options.currentVersion.includes('-')
     client.allowDowngrade = false
-    client.fullChangelog = true
+    client.fullChangelog = false
     client.disableWebInstaller = true
     client.on('update-available', info => this.change({
       ...this.info(info),
@@ -92,7 +92,7 @@ export class UpdateService {
   snapshot(): UpdateState { return { ...this.state } }
 
   private info(info: UpdateInfo) {
-    return { availableVersion: info.version, releaseDate: info.releaseDate ?? '', releaseNotes: releaseNotesText(info.releaseNotes) }
+    return { availableVersion: info.version, releaseDate: info.releaseDate ?? '', releaseNotes: releaseNotesText(info.releaseNotes, info.version) }
   }
 
   private change(patch: Partial<UpdateState>) {
@@ -101,6 +101,8 @@ export class UpdateService {
   }
 
   private fail(error: unknown) {
+    if (this.state.phase === 'error' && this.state.failedStage === this.stage)
+      return
     this.options.logError(error)
     if (this.state.phase === 'installing')
       this.options.installFailed()
@@ -108,7 +110,7 @@ export class UpdateService {
   }
 
   async check() {
-    if (!this.client || ['checking', 'downloading', 'downloaded', 'installing'].includes(this.state.phase))
+    if (!this.client || ['checking', 'available', 'downloading', 'downloaded', 'installing'].includes(this.state.phase))
       return this.snapshot()
     this.stage = 'check'
     this.change({ phase: 'checking', message: '正在检查更新…', failedStage: undefined, percent: 0 })
@@ -116,6 +118,8 @@ export class UpdateService {
       const result = await this.client.checkForUpdates()
       if (!result && this.state.phase === 'checking')
         throw new Error('更新服务未启用')
+      if (this.state.phase === 'available')
+        return await this.download()
     }
     catch (error) { this.fail(error) }
     return this.snapshot()
@@ -134,7 +138,7 @@ export class UpdateService {
   }
 
   install() {
-    if (!this.client || this.state.phase !== 'downloaded')
+    if (!this.client || !(this.state.phase === 'downloaded' || (this.state.phase === 'error' && this.state.failedStage === 'install')))
       return this.snapshot()
     this.stage = 'install'
     this.change({ phase: 'installing', message: '正在保存统计数据并启动安装程序…', failedStage: undefined })

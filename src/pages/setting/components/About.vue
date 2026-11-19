@@ -1,18 +1,20 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import { Loader2 } from 'lucide-vue-next'
 import { releaseHistory } from '@@/const/releaseHistory'
 import { useUpdates } from '@/store/updates'
 import { useSettings } from '@/store/settings'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 
 const logoUrl = `${import.meta.env.BASE_URL}logo.ico`
 const updates = useUpdates()
 const settings = useSettings()
-const busy = computed(() => ['checking', 'downloading', 'installing'].includes(updates.state.phase))
+const latestLocalRelease = releaseHistory[0]
+const busy = computed(() => ['checking', 'available', 'downloading', 'installing'].includes(updates.state.phase))
 const canCheck = computed(() => updates.state.enabled && !busy.value && updates.state.phase !== 'downloaded')
-const canDownload = computed(() => updates.state.phase === 'available' || (updates.state.phase === 'error' && updates.state.failedStage === 'download'))
-onMounted(() => void updates.initialize())
+const canRetryDownload = computed(() => updates.state.phase === 'error' && updates.state.failedStage === 'download')
+const canRetryInstall = computed(() => updates.state.phase === 'error' && updates.state.failedStage === 'install')
 function goto(url: string) {
   window.ipcRenderer.send('open-url', url)
 }
@@ -33,7 +35,7 @@ function date(value: string) {
         <h2 class="text-xl font-semibold">
           TaiM
         </h2><p class="text-sm text-muted-foreground">
-          当前版本 {{ updates.state.currentVersion || releaseHistory[0].version }}
+          当前版本 {{ updates.state.currentVersion || latestLocalRelease.version }}
         </p>
       </div>
     </div>
@@ -41,9 +43,9 @@ function date(value: string) {
       <h3 id="update-title" class="font-semibold">
         软件更新
       </h3>
-      <label class="option-row"><span>启动后自动检查更新</span><input v-model="settings.config.common.autoCheckUpdates" type="checkbox" :disabled="settings.busy" @change="settings.save"></label>
+      <label class="option-row" for="auto-update"><span>启动后自动检查并下载更新</span><Switch id="auto-update" v-model:checked="settings.config.common.autoCheckUpdates" :disabled="settings.busy" @update:checked="settings.save" /></label>
       <p class="text-sm text-muted-foreground my-3">
-        发现新版本后通知，由你决定何时下载和重启安装。
+        发现新版本后会在后台下载，完成后由你决定何时重启安装。
       </p>
       <p role="status" :class="updates.state.phase === 'error' ? 'error-message' : ''">
         {{ updates.state.message }}
@@ -52,8 +54,8 @@ function date(value: string) {
         上次检查：{{ date(updates.state.checkedAt) }}
       </p>
       <div v-if="updates.state.phase === 'downloading'" class="download-progress">
-        <progress :value="updates.state.percent" max="100" aria-label="更新下载进度" />
-        <p class="text-sm text-muted-foreground">
+        <progress :value="updates.state.total > 0 ? updates.state.percent : undefined" max="100" aria-label="更新下载进度" />
+        <p v-if="updates.state.total > 0" class="text-sm text-muted-foreground">
           {{ updates.state.percent.toFixed(1) }}% · {{ size(updates.state.transferred) }} / {{ size(updates.state.total) }} · {{ size(updates.state.bytesPerSecond) }}/s
         </p>
       </div>
@@ -61,11 +63,11 @@ function date(value: string) {
         <Button variant="outline" :disabled="!canCheck" @click="updates.command('updater:check')">
           <Loader2 v-if="updates.state.phase === 'checking'" class="w-4 h-4 mr-2 animate-spin" />检查更新
         </Button>
-        <Button v-if="canDownload" @click="updates.command('updater:download')">
-          {{ updates.state.failedStage === 'download' ? '重试下载' : '下载更新' }}
+        <Button v-if="canRetryDownload" @click="updates.command('updater:download')">
+          重试下载
         </Button>
-        <Button v-if="updates.state.phase === 'downloaded'" @click="updates.command('updater:install')">
-          重启并安装
+        <Button v-if="updates.state.phase === 'downloaded' || canRetryInstall" @click="updates.command('updater:install')">
+          {{ canRetryInstall ? '重试安装' : '重启并安装' }}
         </Button>
         <Button variant="link" @click="goto('https://github.com/badspider7/TaiM/releases')">
           打开发布页面
@@ -78,29 +80,26 @@ function date(value: string) {
         {{ settings.error }}
       </p>
     </section>
-    <section v-if="updates.state.availableVersion" class="update-panel">
-      <h3 class="font-semibold">
-        新版本 {{ updates.state.availableVersion }} 更新说明
-      </h3>
-      <p v-if="updates.state.releaseDate" class="text-xs text-muted-foreground mt-2">
-        {{ date(updates.state.releaseDate) }}
-      </p>
-      <pre class="release-notes">{{ updates.state.releaseNotes || '此版本未提供更新说明，可前往发布页面查看。' }}</pre>
-    </section>
     <section class="update-panel" aria-labelledby="changelog-title">
       <h3 id="changelog-title" class="font-semibold mb-3">
         更新日志
       </h3>
-      <details v-for="entry in releaseHistory" :key="entry.version" open>
-        <summary class="cursor-pointer">
-          {{ entry.version }} · {{ entry.date }} · {{ entry.title }}
-        </summary>
+      <template v-if="updates.state.availableVersion">
+        <p>
+          {{ updates.state.availableVersion }}<span v-if="updates.state.releaseDate"> · {{ date(updates.state.releaseDate) }}</span>
+        </p>
+        <pre class="release-notes">{{ updates.state.releaseNotes || '此版本未提供更新说明，可前往发布页面查看。' }}</pre>
+      </template>
+      <template v-else>
+        <p>
+          {{ latestLocalRelease.version }} · {{ latestLocalRelease.date }} · {{ latestLocalRelease.title }}
+        </p>
         <ul class="list-disc pl-5 mt-3 space-y-2 text-sm">
-          <li v-for="note in entry.notes" :key="note">
+          <li v-for="note in latestLocalRelease.notes" :key="note">
             {{ note }}
           </li>
         </ul>
-      </details>
+      </template>
     </section>
     <div class="text-sm text-muted-foreground">
       <Button variant="link" @click="goto('https://github.com/badspider7/TaiM')">
@@ -117,7 +116,7 @@ function date(value: string) {
 <style scoped>
 .about-form { max-width: 900px; padding-bottom: 24px; }
 .about-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-.update-panel { border: 1px solid hsl(var(--border)); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+.update-panel { border: 1px solid hsl(var(--border)); border-radius: var(--radius); background: hsl(var(--card)); padding: 16px; margin-bottom: 12px; }
 .download-progress { margin: 16px 0; }
 progress { width: 100%; height: 10px; accent-color: hsl(var(--primary)); }
 .release-notes { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 14px; margin-top: 12px; user-select: text; }

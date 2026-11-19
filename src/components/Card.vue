@@ -13,64 +13,59 @@ const props = defineProps({
   },
   previousDelta: {
     type: Number,
-    default: 0,
+    default: undefined,
   },
-  previousUnit: {
+  previousLabel: {
     type: String,
-    default: '',
+    default: undefined,
   },
   unit: {
     type: String,
   },
-  showAppIcon: {
-    type: Boolean,
-    default: false,
-  },
 })
 
-// 判断是否大于0
-const isPositive = computed(() => {
-  return Number(props.previousDelta) >= 0
+const deltaColor = computed(() => {
+  if (!props.previousDelta)
+    return 'text-muted-foreground'
+  return props.previousDelta > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
 })
 </script>
 
 <template>
-  <div class="card shadow-inner">
+  <div class="surface metric-card">
     <div class="total">
-      <div class="title flex flex-row gap-y-1.5 ">
-        <div class="icon">
+      <div class="flex items-center gap-2 text-sm text-muted-foreground">
+        <span class="metric-icon" aria-hidden="true">
           <slot name="iconSlot" />
-        </div>
-        <div>{{ title }}</div>
+        </span>
+        <span>{{ title }}</span>
       </div>
-      <div class="data flex flex-row justify-between" :class="[showAppIcon ? 'items-center' : 'items-end']">
+      <div class="mt-3 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
         <div class="time">
-          <span class="text-2xl ">{{ data }}</span>
-          <span class=" text-sm text-gray-400">{{ unit }}</span>
+          <span class="text-2xl font-semibold tabular-nums">{{ data }}</span>
+          <span v-if="unit" class="ml-1 text-sm text-muted-foreground">{{ unit }}</span>
         </div>
-        <div v-if="!showAppIcon" class="rate flex flex-row items-center " :class="[isPositive ? 'text-green-500' : 'text-red-500']">
-          <span>
-            <ArrowDown20Regular v-if="!isPositive" class="w-4 h-4" />
-            <ArrowUp20Regular v-else class="w-4 h-4" />
-          </span>
-          {{ Math.abs(previousDelta) + previousUnit }}
+        <div v-if="previousDelta != null" class="flex items-center text-sm tabular-nums" :class="deltaColor">
+          <ArrowDown20Regular v-if="previousDelta < 0" class="w-4 h-4" aria-label="减少" />
+          <ArrowUp20Regular v-else-if="previousDelta > 0" class="w-4 h-4" aria-label="增加" />
+          {{ previousLabel ?? Math.abs(previousDelta) }}
         </div>
-        <div v-else>
-          <slot name="appIcon" />
-        </div>
+        <slot name="app" />
       </div>
     </div>
   </div>
 </template>
 
-<style lang="scss" scoped>
-    .card{
-        // width: 12.5rem;
-        flex: 1;
-        height: 4.375rem;
-        background-color: hsl(var(--card));
-        border-radius: .5rem;
-        padding: .625rem;
-        border: .0625rem solid hsl(var(--border));
-    }
+<style scoped>
+.metric-card { padding: 14px; }
+.metric-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  flex: none;
+  place-items: center;
+  border-radius: calc(var(--radius) - 2px);
+  background: hsl(var(--primary) / 0.10);
+  color: hsl(var(--danger-text));
+}
 </style>

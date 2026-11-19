@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import Header from '@/components/layout/Header.vue'
 import SideBar from '@/components/layout/SideBar.vue'
 import { useAppInfo } from '@/store/app'
@@ -8,6 +9,12 @@ import { useUpdates } from '@/store/updates'
 import UpdateNotice from '@/components/UpdateNotice.vue'
 
 const updates = useUpdates()
+const route = useRoute()
+const content = ref<HTMLElement>()
+watch([() => route.path, () => route.query.tab, () => route.query.app], () => {
+  if (content.value)
+    content.value.scrollTop = 0
+}, { flush: 'post' })
 
 onMounted(() => {
   const appInfo = useAppInfo()
@@ -23,7 +30,9 @@ onUnmounted(() => updates.dispose())
   <UpdateNotice />
   <div class="app-container">
     <SideBar />
-    <router-view class="display-content" />
+    <main ref="content" class="display-content" aria-label="页面内容">
+      <router-view />
+    </main>
   </div>
 </template>
 
@@ -32,35 +41,35 @@ onUnmounted(() => updates.dispose())
   font-family: 'Questrial';
   src: url('@/assets/font/Questrial-Regular.ttf') format('truetype');
 }
-#app{
-  width: 100%;
-  height: 100%;
-  padding: 0 15px;
-  font-family: Questrial,sans-serif;
-}
-.app-container{
+#app {
   display: flex;
-  overflow: hidden;
-  height: calc(100% - 70px);
-  margin-top: 5px;
+  flex-direction: column;
+  height: 100%;
+  font: 14px/1.5 "Segoe UI Variable", "Segoe UI", "Microsoft YaHei UI", sans-serif;
 }
-
-.display-content{
-  flex:1;
-  margin-left: 20px;
-  border: 1.5px solid #d9d9d9;
-  border-radius: 8px;
-  // box-shadow: 2px 2px 3px 2px #cdcccc;
-  padding: 20px 10px 0 10px;
+.app-container {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.display-content {
+  min-width: 0;
+  overflow: auto;
+  background: color-mix(in srgb, hsl(var(--background)) 70%, hsl(var(--secondary)));
+  padding: 26px clamp(16px, 3vw, 42px) 32px;
+}
+.display-content > * {
+  max-width: 1400px;
+  margin-inline: auto;
 }
 
 // 修改全局的滚动条样式
 body,
 body * {
-  user-select: none;
   &::-webkit-scrollbar-track-piece {
-    background-color: #fff;
-    -webkit-border-radius: 0;
+    background-color: hsl(var(--background));
   }
 
   &::-webkit-scrollbar {
@@ -68,23 +77,14 @@ body * {
     height: 8px;
   }
 
-  &::-webkit-scrollbar-thumb:vertical {
-    height: 50px;
-    background-color: rgba(153, 153, 153, 0.5);
-    -webkit-border-radius: 4px;
-    outline: 2px solid #fff;
-    outline-offset: -2px;
-    border: 2px solid #fff;
-  }
-
   &::-webkit-scrollbar-thumb {
-    background-color: rgba(159, 159, 159, 0.3);
-    -webkit-border-radius: 4px;
+    border: 2px solid hsl(var(--background));
+    border-radius: 6px;
+    background-color: hsl(var(--muted-foreground) / 0.5);
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(159, 159, 159, 0.5);
-    -webkit-border-radius: 4px;
+    background-color: hsl(var(--muted-foreground) / 0.75);
   }
 }
 </style>

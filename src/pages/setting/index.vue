@@ -1,18 +1,11 @@
 <script setup lang='ts'>
 import TabBar from './TabBar.vue'
+import PageHeading from '@/components/layout/PageHeading.vue'
 </script>
 
 <template>
-  <div class="statistic-wrap page-scroll">
-    <div class="title font-middle text-lg">
-      设置
-    </div>
-    <div class="tab-bar mt-5">
-      <TabBar />
-    </div>
+  <div>
+    <PageHeading title="设置" />
+    <TabBar />
   </div>
 </template>
-
-<style lang="scss" scoped>
-
-</style>

@@ -149,7 +149,7 @@ async function run() {
     setupWebsites(win)
     handleUsageData()
     const { setupUpdates } = await import('../electron/update/index.ts')
-    setupUpdates(win, () => {}, () => {})
+    const updateService = setupUpdates(win, () => {}, () => {})
     const errors = []
     win.webContents.on('console-message', (_event, level, message) => {
       if (level === 3) {
@@ -169,11 +169,53 @@ async function run() {
     }
     await win.loadFile(path.resolve('dist/index.html'))
     await test('Built renderer boots with isolated preload and persisted dark theme', async () => {
-      await waitText('最为频繁')
+      await waitText('使用时长排行')
       for (let i = 0; i < 60 && !await js('document.documentElement.classList.contains(\'dark\')'); i++) await pause(50)
       assert.equal(await js('document.documentElement.classList.contains(\'dark\')'), true, JSON.stringify({ errors, body: await js('document.body.innerText'), settings: await invoke('settings:get') }))
       assert.equal(await js('typeof window.require'), 'undefined')
       assert.equal(await js('(() => { try { window.ipcRenderer.invoke(\'unapproved-channel\'); return false } catch { return true } })()'), true)
+    })
+    await test('Overview duration cards show seconds, minutes and hours with minutes at their boundaries', async () => {
+      const { Time, formatDate } = await import('../src/utils/timerEvent.ts')
+      for (const [seconds, expected] of [[0, '0秒'], [59.9, '59秒'], [60, '1分钟'], [1872, '31分钟'], [3599.9, '59分钟'], [3600, '1小时'], [3660, '1小时1分钟']])
+        assert.equal(Time.toString(seconds, true), expected)
+      const today = formatDate(new Date())
+      const existing = await invoke('usageData:day', today)
+      const existingTime = existing.reduce((total, row) => total + row.time, 0)
+      write({ ...record, startTime: today, duration: 1872 - existingTime })
+      await js('window.dispatchEvent(new Event(\'focus\'))')
+      await waitText('31分钟')
+      const cards = await js('Array.from(document.querySelectorAll(\'.overview-cards .time\'), node => node.textContent.trim())')
+      assert.equal(cards[0], '31分钟')
+      assert.equal(cards[2], '31分钟')
+    })
+    await test('Overview ranking adapts icon tiles and usage bars to both themes', async () => {
+      const readRow = () => js(`(() => {
+        const row = document.querySelector('.usage-app-row');
+        const icon = row.querySelector('.usage-app-icon');
+        const bar = row.querySelector('.usage-app-progress');
+        const indicator = bar.firstElementChild;
+        return {
+          href: row.getAttribute('href'),
+          icon: getComputedStyle(icon).backgroundColor,
+          track: getComputedStyle(bar).backgroundColor,
+          indicator: getComputedStyle(indicator).backgroundColor,
+        };
+      })()`)
+      const dark = await readRow()
+      try {
+        await js('document.documentElement.classList.remove(\'dark\')')
+        const light = await readRow()
+        assert.match(dark.href, /^#\/detail\?app=\d+$/)
+        for (const element of ['icon', 'track', 'indicator'])
+          assert.notEqual(dark[element], light[element], element)
+        assert.notEqual(dark.track, dark.indicator)
+      }
+      finally {
+        await js('document.documentElement.classList.add(\'dark\')')
+      }
+      await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+      await fs.writeFile(path.join(temporary, 'overview.png'), (await win.webContents.capturePage()).toPNG())
     })
     await test('Category creation, assignment, rename and deletion through IPC', async () => {
       await invoke('categories:save', null, '开发')
@@ -194,8 +236,18 @@ async function run() {
     await test('Detail, statistics and data settings routes render without runtime errors', async () => {
       await js('location.hash = \'#/detail\'')
       await waitText('查询 / 刷新')
+      await js('[...document.querySelectorAll(\'button\')].find(button => button.textContent.trim() === \'近 7 天\').click()')
+      const [first, last] = await js('[...document.querySelectorAll(\'input[type=date]\')].map(input => input.value)')
+      assert.equal(Date.parse(last) - Date.parse(first), 6 * 86400000)
+      await waitText(`${first} 至 ${last}`)
       await js('location.hash = \'#/statistics\'')
       await waitText('累计使用时间')
+      await waitText('查看时段明细')
+      const { chooseSelect } = await import('./ui-select.mjs')
+      await chooseSelect(js, '选择时段查看应用明细', '00:00')
+      await waitText('返回使用时长排行')
+      await js('[...document.querySelectorAll(\'button\')].find(button => button.textContent.trim() === \'返回使用时长排行\').click()')
+      await waitText('使用时长排行')
       for (const tab of ['按周', '按月', '按年', '按天']) {
         await js(`[...document.querySelectorAll('button')].find(b => b.textContent.trim() === ${JSON.stringify(tab)}).click()`)
         await pause(200)
@@ -208,29 +260,76 @@ async function run() {
       await pause(100)
       await fs.writeFile(path.join(temporary, 'settings.png'), (await win.webContents.capturePage()).toPNG())
     })
-    await test('About page deep link shows offline release history and disables development updates', async () => {
+    await test('Main pages fit a narrow window while keeping their navigation and filters visible', async () => {
+      const [width, height] = win.getSize()
+      win.setSize(690, 620)
+      const pages = [
+        ['/', '概览', 'overview'],
+        ['/statistics', '统计', 'statistics'],
+        ['/detail', '应用详情', 'applications'],
+        ['/category', '分类', 'categories'],
+        ['/websites', '网站停留时间', 'websites'],
+        ['/setting', '设置', 'settings'],
+      ]
+      try {
+        for (let attempt = 0; attempt < 60 && !await js('innerWidth < 760'); attempt++)
+          await pause(25)
+        assert.equal(await js('innerWidth < 760'), true)
+        for (const [route, heading, screenshot] of pages) {
+          await js(`location.hash = ${JSON.stringify(`#${route}`)}`)
+          for (let attempt = 0; attempt < 60 && !await js(`document.querySelector('main h1')?.textContent === ${JSON.stringify(heading)}`); attempt++)
+            await pause(25)
+          assert.equal(await js('document.querySelector(\'main h1\')?.textContent'), heading)
+          await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+          assert.equal(await js('document.querySelector(\'main\').scrollWidth <= document.querySelector(\'main\').clientWidth + 1'), true, route)
+          await fs.writeFile(path.join(temporary, `compact-${screenshot}.png`), (await win.webContents.capturePage()).toPNG())
+        }
+      }
+      finally {
+        win.setSize(width, height)
+      }
+    })
+    await test('About page shows only the latest offline release and disables development updates', async () => {
       await js('location.hash = \'#/setting?tab=about\'')
       await waitText('更新日志')
       await waitText('开发模式不下载和安装更新')
+      await waitText('网站计时与界面统一')
+      assert.equal(await js('document.body.innerText.includes(\'首个公开测试版\')'), false)
       assert.equal(await js('[...document.querySelectorAll(\'button\')].find(b => b.textContent.trim() === \'检查更新\').disabled'), true)
       await pause(100)
       await fs.writeFile(path.join(temporary, 'updates.png'), (await win.webContents.capturePage()).toPNG())
     })
-    await test('Update events show the global notice, download progress and safe remote notes', async () => {
+    await test('Download completion shows an actionable global toast and latest release notes', async () => {
       const original = await invoke('updater:get')
       const available = { ...original, revision: 100, enabled: true, phase: 'available', availableVersion: '0.0.2-beta.1', releaseNotes: '<img src=x onerror=alert(1)>修复记录', message: '发现新版本 0.0.2-beta.1' }
       win.webContents.send('updater:state', available)
-      await waitText('发现新版本')
-      await js('location.hash = \'#/\'')
-      await waitText('最为频繁')
-      await js('document.querySelector(\'.update-notice button\').click()')
-      await waitText('新版本 0.0.2-beta.1 更新说明')
+      await waitText('修复记录')
       assert.equal(await js('document.querySelectorAll(\'.release-notes img\').length'), 0)
+      assert.equal(await js('document.body.innerText.includes(\'网站计时与界面统一\')'), false)
       win.webContents.send('updater:state', { ...available, revision: 101, phase: 'downloading', percent: 25, transferred: 250, total: 1000, message: '正在下载更新，可继续使用 TaiM' })
       await waitText('25.0%')
-      win.webContents.send('updater:state', { ...available, revision: 102, phase: 'downloaded', percent: 100, message: '更新已准备就绪' })
+      assert.equal(await js('document.querySelector(\'.update-notice button\')'), null)
+      await js('location.hash = \'#/\'')
+      await waitText('使用时长排行')
+      const ready = { ...available, revision: 102, phase: 'downloaded', percent: 100, message: '更新已准备就绪' }
+      win.webContents.send('updater:state', ready)
       await waitText('重启并安装')
-      win.webContents.send('updater:state', { ...original, revision: 103 })
+      const install = updateService.install
+      updateService.install = () => ({ ...ready, revision: 103, phase: 'error', failedStage: 'install', message: '安装测试失败' })
+      try {
+        await js('Array.from(document.querySelectorAll(\'.update-notice button\')).find(button => button.textContent.trim() === \'重启并安装\').click()')
+        await waitText('安装测试失败')
+        win.webContents.send('updater:state', { ...ready, revision: 104 })
+        await waitText('重启并安装')
+        await js('Array.from(document.querySelectorAll(\'.update-notice button\')).find(button => button.textContent.trim() === \'稍后\').click()')
+        assert.equal(await js('document.querySelector(\'.update-notice button\')'), null)
+        await js('location.hash = \'#/setting?tab=about\'')
+        await waitText('重启并安装')
+      }
+      finally {
+        updateService.install = install
+        win.webContents.send('updater:state', { ...original, revision: 105 })
+      }
     })
     const { testSelects } = await import('./ui-select.mjs')
     await testSelects(test, { win, js, invoke, waitText, temporary })

@@ -6,25 +6,16 @@ export function formatDate(date: Date) {
 }
 
 export class Time {
-  static toHoursString(seconds: number) {
-    const hours = (Number.isFinite(seconds) ? Math.max(0, seconds) : 0) / 3600
-    if (hours > 0) {
-      return hours.toFixed(2)
-    }
-    else {
-      return '0'
-    }
-  }
-
-  static toString(seconds: number) {
-    seconds = Math.max(0, Math.round(Number.isFinite(seconds) ? seconds : 0))
+  static toString(seconds: number, compact = false) {
+    seconds = Math.max(0, Number.isFinite(seconds) ? seconds : 0)
+    seconds = compact ? Math.floor(seconds) : Math.round(seconds)
     let minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
 
     if (minutes < 1) {
       return `${seconds}秒`
     }
 
+    const remainingSeconds = compact ? 0 : seconds % 60
     const hours = Math.floor(minutes / 60)
     minutes %= 60
 

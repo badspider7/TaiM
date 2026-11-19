@@ -36,7 +36,7 @@ function tabChange(input: string | number) {
 </script>
 
 <template>
-  <Tabs :model-value="activeTab" class="list-wrap" @update:model-value="tabChange">
+  <Tabs :model-value="activeTab" @update:model-value="tabChange">
     <TabsList>
       <TabsTrigger value="day" @click="tabChange('day')">
         按天
@@ -51,24 +51,8 @@ function tabChange(input: string | number) {
         按年
       </TabsTrigger>
     </TabsList>
-    <div class="date-container mt-2">
-      <div class="date-btn">
-        <component :is="acitveCom" />
-      </div>
+    <div class="mt-3">
+      <component :is="acitveCom" />
     </div>
   </Tabs>
 </template>
-
-<style lang="scss" scoped>
-.list-wrap{
-  height: 100%
-}
-.date-container{
-  height: calc(100% - 50px);
-}
-.date-btn{
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-</style>

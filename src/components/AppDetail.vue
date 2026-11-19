@@ -1,145 +1,32 @@
-<script setup lang='ts'>
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import type { AppData } from '@@/type/types'
+<script setup lang="ts">
+import { computed } from 'vue'
 import { Calendar as CalendarIcon } from 'lucide-vue-next'
-import { Progress } from '@/components/ui/progress'
-import { Time } from '@/utils/timerEvent'
-import { Button } from '@/components/ui/button'
+import type { AppData } from '@@/type/types'
+import AppUsageRow from '@/components/AppUsageRow.vue'
 import NoData from '@/components/NoData.vue'
+import { Button } from '@/components/ui/button'
+import { Time } from '@/utils/timerEvent'
 
-const props = defineProps({
-  appData: {
-    type: Array as () => AppData[],
-    default: () => [],
-    required: true,
-  },
-  date: {
-    type: String,
-    default: '',
-    required: true,
-  },
-})
+const props = defineProps<{ appData: AppData[], date: string }>()
 
-const router = useRouter()
-const iconErrors = ref(new Set<string>())
-
-const frequentlyApp = computed(() => {
-  const tempAppInfo = [...props.appData]
-  return tempAppInfo.sort((a, b) => b.totalTime - a.totalTime)
-})
-
-function formatTime(second: number) {
-  return Time.toString(second)
-}
-
-// 计算宽度
-function getProgressWidth(second: number) {
-  const first = frequentlyApp.value[0]?.totalTime || 1
-  const rate = `${Math.floor((second / first) * 100)}%`
-  return rate
-}
-
-function viewDetail(id: number | undefined) {
-  void router.push({ path: '/detail', query: { app: String(id) } })
-}
+const sortedApps = computed(() => [...props.appData].sort((a, b) => b.totalTime - a.totalTime))
+const totalTime = computed(() => props.appData.reduce((sum, app) => sum + app.totalTime, 0))
 </script>
 
 <template>
-  <div class="app-list-wrap">
-    <div class="time-box">
-      <Button
-        variant="secondary"
-      >
-        <CalendarIcon class="mr-2 h-4 w-4" />
-        {{ date }}
-      </Button>
-    </div>
-    <div class="title text-gray-400 text-base mt-4">
-      <span>
-        总计{{ frequentlyApp.length }}个应用，使用时间{{ formatTime(frequentlyApp.reduce((a, b) => a + b.totalTime, 0)) }}
-      </span>
-    </div>
-    <div v-if="frequentlyApp.length > 0" class="app-list">
-      <div v-for="item in frequentlyApp" :key="item.id" class="app-info" @click="viewDetail(item.id)">
-        <div class="app-icon">
-          <img v-if="item.iconFile && !iconErrors.has(item.iconFile)" :src="item.iconFile" alt="" class="w-5 h-5" @error="iconErrors.add(item.iconFile)">
-          <span v-else class="text-muted-foreground">{{ (item.alias || item.name).slice(0, 1) }}</span>
-        </div>
-        <div class="show-data">
-          <div class="app-name text-gray-600">
-            {{ item.alias || item.name }}
-          </div>
-          <Progress :model-value="100" class="progress " :style="{ width: getProgressWidth(item.totalTime) }" />
-        </div>
-        <div class="usage-time">
-          {{ formatTime(item.totalTime) }}
-        </div>
-      </div>
-    </div>
+  <div class="mt-4">
+    <Button variant="secondary">
+      <CalendarIcon class="mr-2 h-4 w-4" />
+      {{ date }}
+    </Button>
+    <p class="mt-4 text-base text-muted-foreground">
+      总计{{ sortedApps.length }}个应用，使用时间{{ Time.toString(totalTime) }}
+    </p>
+    <ul v-if="sortedApps.length">
+      <li v-for="app in sortedApps" :key="app.id">
+        <AppUsageRow :app="app" :max-time="sortedApps[0].totalTime" />
+      </li>
+    </ul>
     <NoData v-else />
   </div>
 </template>
-
-<style lang="scss" scoped>
-.app-list-wrap{
-    display: flex;
-    flex-direction: column;
-    margin-top: 1rem;
-}
-
-.app-list{
-    flex: 1;
-    overflow: hidden auto;
-}
-.app-info{
-    display: flex;
-    align-items:center;
-    margin: 1.25rem 0;
-    .app-icon{
-        width: 3.125rem;
-        height: 3.125rem;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        background-color: #f0f0f0;
-        margin-right: 1rem;
-        border-radius: .25rem;
-        border: .125rem solid transparent;
-    }
-    .show-data{
-        flex:1;
-        .progress{
-            height: .75rem;
-            // background-color: transparent;
-        }
-       :deep(.bg-primary){
-            background-color: #cfcfcf !important;
-        }
-    }
-    .usage-time{
-        width: 7.8125rem;
-        font-size: .875rem;
-        align-self: end;
-        margin-left: .625rem;
-    }
-}
-
-.app-info:hover{
-    cursor: pointer;
-  .app-icon{
-    // box-shadow: .1875rem .125rem .1875rem 0rem #cccc;
-    border: .125rem solid rgb(248, 20, 61);
-    transition: all 1s ease-out;
-  }
-  .app-name{
-    color:rgb(248, 20, 61)
-  }
-  :deep(.bg-primary){
-    background-color: rgb(233, 56, 88) !important;
-  }
-   .usage-time{
-    color: rgb(248, 20, 61)
-   }
-}
-</style>

@@ -53,6 +53,7 @@ function create(client = new FakeUpdater(), overrides = {}) {
 export async function testUpdates(test, temporary) {
   await test('Updater guards duplicate checks and downloads and installs only downloaded updates', async () => {
     let finish
+    let finishDownload
     const { client, states, service } = create()
     client.checkAction = () => new Promise((resolve) => {
       finish = resolve
@@ -66,12 +67,26 @@ export async function testUpdates(test, temporary) {
     assert.equal(client.installs.length, 0)
     client.emit('update-available', info)
     finish()
-    await checking
+    await new Promise((resolve) => {
+      client.downloadAction = () => new Promise((done) => {
+        finishDownload = done
+        resolve()
+      })
+    })
     assert.equal(client.autoDownload, false)
     assert.equal(client.autoInstallOnAppQuit, false)
+    assert.equal(client.fullChangelog, false)
     assert.equal(client.allowPrerelease, true)
     assert.equal(client.allowDowngrade, false)
+    assert.equal(service.snapshot().phase, 'downloading')
+    await service.check()
     await service.download()
+    service.install()
+    assert.equal(client.installs.length, 0)
+    client.emit('download-progress', { percent: 50, transferred: 100, total: 200, bytesPerSecond: 20 })
+    client.emit('update-downloaded', info)
+    finishDownload()
+    await checking
     assert.equal(states.some(state => state.percent === 50), true)
     assert.equal(service.snapshot().phase, 'downloaded')
     await service.check()
@@ -84,8 +99,12 @@ export async function testUpdates(test, temporary) {
   })
   await test('Updater handles network errors, download retries, failed save and disabled development mode', async () => {
     let recovered = 0
+    let failSave = true
     const { client, service } = create(new FakeUpdater(), {
-      beforeInstall() { throw new Error('disk full') },
+      beforeInstall() {
+        if (failSave)
+          throw new Error('disk full')
+      },
       installFailed() { recovered++ },
     })
     client.checkAction = async () => {
@@ -95,11 +114,10 @@ export async function testUpdates(test, temporary) {
     assert.equal(service.snapshot().phase, 'error')
     assert.ok(service.snapshot().message.includes('网络'))
     client.checkAction = undefined
-    await service.check()
     client.downloadAction = async () => {
       throw new Error('checksum mismatch')
     }
-    await service.download()
+    await service.check()
     assert.equal(service.snapshot().failedStage, 'download')
     assert.ok(service.snapshot().message.includes('校验'))
     client.downloadAction = undefined
@@ -108,6 +126,10 @@ export async function testUpdates(test, temporary) {
     assert.equal(client.installs.length, 0)
     assert.equal(service.snapshot().failedStage, 'install')
     assert.equal(recovered, 1)
+    failSave = false
+    service.install()
+    assert.equal(client.installs.length, 1)
+    assert.equal(client.downloadCalls, 2)
     const disabled = new UpdateService(undefined, { currentVersion: '1.0.0', notify() {}, beforeInstall() {}, installFailed() {}, logError() {} })
     assert.equal((await disabled.check()).phase, 'disabled')
     assert.equal((await disabled.download()).phase, 'disabled')
@@ -119,10 +141,12 @@ export async function testUpdates(test, temporary) {
     const stable = create(new FakeUpdater(), { currentVersion: '1.0.0' })
     assert.equal(stable.client.allowPrerelease, false)
   })
-  await test('Update notes support GitHub HTML and multi-version notes without rendering markup', () => {
-    assert.equal(releaseNotesText(info.releaseNotes), '修复计时\n新增功能')
-    assert.equal(releaseNotesText([{ version: '2.0.0', note: 'Hello' }, { version: '1.1.0', note: null }]), '2.0.0\nHello\n\n1.1.0')
-    assert.equal(releaseNotesText(undefined), '')
+  await test('Update notes use only the target version and strip GitHub HTML', () => {
+    assert.equal(releaseNotesText(info.releaseNotes, info.version), '修复计时\n新增功能')
+    const history = [{ version: '1.1.0', note: 'Older' }, { version: '2.0.0', note: 'Hello' }]
+    assert.equal(releaseNotesText(history, '2.0.0'), 'Hello')
+    assert.equal(releaseNotesText(history, '3.0.0'), '')
+    assert.equal(releaseNotesText(undefined, info.version), '')
   })
   await test('Real electron-updater checks, downloads and validates a local HTTP fixture without installing', async () => {
     // Deliberately not an executable; never call quitAndInstall on this client.
@@ -155,9 +179,7 @@ export async function testUpdates(test, temporary) {
       client.logger = null
       const { service } = create(client, { currentVersion: '1.0.0' })
       await service.check()
-      assert.equal(service.snapshot().phase, 'available')
       assert.equal(service.snapshot().availableVersion, '99.0.0')
-      await service.download()
       assert.equal(service.snapshot().phase, 'downloaded')
       assert.equal(service.snapshot().percent, 100)
       assert.equal(client.autoInstallOnAppQuit, false)
@@ -170,7 +192,6 @@ export async function testUpdates(test, temporary) {
       invalidClient.logger = null
       const rejected = create(invalidClient, { currentVersion: '1.0.0' })
       await rejected.service.check()
-      await rejected.service.download()
       assert.equal(rejected.service.snapshot().phase, 'error')
       assert.equal(rejected.service.snapshot().failedStage, 'download')
       assert.ok(rejected.service.snapshot().message.includes('校验'))

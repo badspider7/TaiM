@@ -1,17 +1,21 @@
 <script setup lang='ts'>
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import type { AppData, DailyLogModels } from '@@/type/types'
-import type { Ref } from 'vue'
-import Tab from './Tab.vue'
 import AppList from './FrequentApp.vue'
+import CardGroup from '@/components/CardGroup.vue'
+import PageHeading from '@/components/layout/PageHeading.vue'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import getUsageTimeApi from '@/api/getUsageTime'
 import { handleTimeRangeData } from '@/utils'
 import { Time, formatDate } from '@/utils/timerEvent'
 import { useAppDetail } from '@/hooks/useAppDetail'
 
-const appData: Ref<AppData[]> = ref([])
+const appData = ref<AppData[]>([])
+const previousData = ref<DailyLogModels[]>([])
 
 const selectedTab = ref('today')
+const loadingPeriod = ref(true)
 let requestId = 0
 let refreshTimer: ReturnType<typeof setInterval>
 const error = ref('')
@@ -19,15 +23,32 @@ async function refresh() {
   const request = ++requestId
   try {
     error.value = ''
-    const data = selectedTab.value === 'today' ? await getTodayAppData() : await getWeekAppData()
-    if (request === requestId)
+    const today = selectedTab.value === 'today'
+    const [data, previous] = await Promise.all([
+      today ? getTodayAppData() : getWeekAppData(),
+      getPreviousData(today).catch(() => []),
+    ])
+    if (request === requestId) {
       appData.value = data
+      previousData.value = previous
+    }
   }
   catch (e) {
     if (request === requestId)
       error.value = String(e)
   }
+  finally {
+    if (request === requestId)
+      loadingPeriod.value = false
+  }
 }
+watch(selectedTab, () => {
+  loadingPeriod.value = true
+  appData.value = []
+  previousData.value = []
+  void refresh()
+})
+
 onMounted(() => {
   void refresh()
   refreshTimer = setInterval(() => void refresh(), 15000)
@@ -50,29 +71,53 @@ async function getWeekAppData() {
   return await useAppDetail(weekData)
 }
 
-function tabChange(activeTab: string) {
-  selectedTab.value = activeTab
-  void refresh()
+async function getPreviousData(today: boolean) {
+  if (today)
+    return await getUsageTimeApi.getDailyTime(Time.getYesterdayDate())
+  const { start, end } = Time.getLastWeekDate()
+  return await handleTimeRangeData(start, end)
 }
 </script>
 
 <template>
-  <div class="overview-wrap">
-    <div class="title font-middle text-lg">
-      概览
-    </div>
+  <div>
+    <PageHeading title="概览">
+      <template #actions>
+        <router-link to="/statistics" class="action-button">
+          查看使用趋势
+        </router-link>
+      </template>
+    </PageHeading>
     <p v-if="error" role="alert" class="error-message">
-      {{ error }}
+      读取使用记录失败。<Button variant="outline" size="sm" class="ml-2" @click="refresh">
+        重试
+      </Button>
     </p>
-    <div class="choose-time mt-5">
-      <Tab :app-data="appData" @tab-change="tabChange" />
-      <AppList :app-data="appData" style="height:calc(100% - 145px)" />
+    <div>
+      <Tabs v-model="selectedTab">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <TabsList>
+            <TabsTrigger value="today">
+              今日
+            </TabsTrigger>
+            <TabsTrigger value="week">
+              本周
+            </TabsTrigger>
+          </TabsList>
+          <p class="text-sm text-muted-foreground">
+            {{ selectedTab === 'today' ? '对比昨日全天' : '对比上周整周' }}
+          </p>
+        </div>
+      </Tabs>
+      <p v-if="loadingPeriod" class="surface p-6 mt-4 text-muted-foreground" role="status">
+        正在加载使用记录…
+      </p>
+      <template v-else-if="!error || appData.length">
+        <CardGroup :current-app-info="appData" :last-app-info="previousData" />
+        <div class="surface p-4 mt-4">
+          <AppList :app-data="appData" />
+        </div>
+      </template>
     </div>
   </div>
 </template>
-
-<style lang="scss" scoped>
-.choose-time{
-  height:calc(100% - 50px);
-}
-</style>
