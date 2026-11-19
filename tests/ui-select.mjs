@@ -33,7 +33,7 @@ export async function chooseSelect(js, label, text) {
 }
 
 function contrast(foreground, background) {
-  const luminance = rgb => rgb.match(/\d+/g).slice(0, 3).map(Number)
+  const luminance = rgb => rgb.slice(0, 3)
     .map(value => value / 255)
     .map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
     .reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0)
@@ -124,25 +124,41 @@ export async function testSelects(test, { win, js, invoke, waitText, temporary, 
     try {
       await debuggerClient.sendCommand('DOM.enable')
       await debuggerClient.sendCommand('CSS.enable')
+      await debuggerClient.sendCommand('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'none' }] })
       const { root } = await debuggerClient.sendCommand('DOM.getDocument')
-      for (const selector of ['.sidebar-link[href="#/statistics"]', '.window-control']) {
-        const { nodeId } = await debuggerClient.sendCommand('DOM.querySelector', { nodeId: root.nodeId, selector })
-        await debuggerClient.sendCommand('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: ['hover', 'focus-visible'] })
-      }
+      const selectors = ['.sidebar-link[href="#/statistics"]', '.window-control']
       for (const [theme, label] of [['light', '浅色'], ['dark', '深色']]) {
         await chooseSelect(js, '主题', label)
         await waitFor(js, `document.documentElement.classList.contains('dark') === ${theme === 'dark'}`)
         assert.equal((await invoke('settings:get')).config.common.theme, theme)
-        const [sidebar, windowControl] = await js(`['.sidebar-link[href="#/statistics"]', '.window-control'].map(selector => {
-          const control = document.querySelector(selector);
-          const { backgroundColor, color, outlineStyle } = getComputedStyle(control);
-          return { backgroundColor, color, outlineStyle, fill: getComputedStyle(control.querySelector('svg path, svg rect')).fill };
-        })`)
+        for (const selector of selectors) {
+          const { nodeId } = await debuggerClient.sendCommand('DOM.querySelector', { nodeId: root.nodeId, selector })
+          assert.ok(nodeId, selector)
+          await debuggerClient.sendCommand('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: ['hover', 'focus-visible'] })
+        }
+        const [sidebar, windowControl] = await js(`(async () => {
+          await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          function rgba(value) {
+            context.clearRect(0, 0, 1, 1);
+            context.fillStyle = value;
+            context.fillRect(0, 0, 1, 1);
+            return Array.from(context.getImageData(0, 0, 1, 1).data);
+          }
+          return ${JSON.stringify(selectors)}.map(selector => {
+            const control = document.querySelector(selector);
+            const { backgroundColor, color, outlineStyle } = getComputedStyle(control);
+            const fill = getComputedStyle(control.querySelector('svg path, svg rect')).fill;
+            return { selector, backgroundColor, foreground: rgba(color), background: rgba(backgroundColor), fill: rgba(fill), outlineStyle };
+          });
+        })()`)
         for (const item of [sidebar, windowControl]) {
-          assert.equal(item.backgroundColor.startsWith('rgb('), true)
-          assert.ok(contrast(item.color, item.backgroundColor) >= 4.5)
-          assert.equal(item.outlineStyle, 'solid')
-          assert.equal(item.fill, item.color)
+          const context = JSON.stringify({ theme, ...item })
+          assert.equal(item.background[3], 255, context)
+          assert.ok(contrast(item.foreground, item.background) >= 4.5, context)
+          assert.equal(item.outlineStyle, 'solid', context)
+          assert.deepEqual(item.fill, item.foreground, context)
         }
         const navigation = await js(`(() => {
           const active = document.querySelector('.sidebar-link.is-active');
@@ -159,6 +175,7 @@ export async function testSelects(test, { win, js, invoke, waitText, temporary, 
       }
     }
     finally {
+      await debuggerClient.sendCommand('Emulation.setEmulatedMedia', { features: [] })
       debuggerClient.detach()
     }
   })
