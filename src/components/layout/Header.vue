@@ -83,12 +83,14 @@ function closeHandler() {
      z-index: 1;
      -webkit-app-region: no-drag;
     .window-control{
+      --window-control-color: var(--foreground);
       width:30px;
       height: 30px;
       border-radius: calc(var(--radius) - 4px);
+      color: hsl(var(--window-control-color));
       &:hover {
+        --window-control-color: var(--accent-foreground);
         background-color: hsl(var(--accent));
-        color: hsl(var(--accent-foreground));
       }
       &:focus-visible {
         outline-offset: -2px;
@@ -97,6 +99,9 @@ function closeHandler() {
         width: 16px;
         height: 100%;
         margin: auto;
+      }
+      :deep(svg [fill="currentColor"]) {
+        fill: hsl(var(--window-control-color));
       }
     }
     }
