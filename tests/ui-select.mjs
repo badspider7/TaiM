@@ -41,7 +41,7 @@ function contrast(foreground, background) {
   return (lighter + 0.05) / (darker + 0.05)
 }
 
-export async function testSelects(test, { win, js, invoke, waitText, temporary }) {
+export async function testSelects(test, { win, js, invoke, waitText, temporary, appFixture }) {
   await test('Statistics period selectors switch weeks, months and years through component menus', async () => {
     await js('location.hash = \'#/statistics\'')
     await waitText('累计使用时间')
@@ -56,7 +56,8 @@ export async function testSelects(test, { win, js, invoke, waitText, temporary }
   await test('Component selects filter application detail and persist category assignments', async () => {
     await invoke('categories:save', null, '下拉验证')
     const category = (await invoke('categories:list')).find(c => c.name === '下拉验证')
-    const model = (await invoke('getAppInfo'))[0]
+    const model = (await invoke('getAppInfo')).find(app => app.file === appFixture.file)
+    assert.ok(model?.alias)
     await js('location.hash = \'#/category\'')
     await waitText('应用归类')
     await waitFor(js, `!![...document.querySelectorAll('[role="combobox"]')].find(e => e.getAttribute('aria-label') === ${JSON.stringify(`${model.name}的分类`)})`)
@@ -66,11 +67,21 @@ export async function testSelects(test, { win, js, invoke, waitText, temporary }
     assert.equal((await invoke('getAppInfo')).find(a => a.id === model.id).categoryId, category.id)
     await js('location.hash = \'#/detail\'')
     await waitText('查询 / 刷新')
-    await waitText('代码编辑器')
+    const fixtureDate = appFixture.startTime.slice(0, 10)
+    await js(`(() => {
+      const form = document.querySelector('form[aria-label="日期范围"]');
+      for (const input of form.querySelectorAll('input[type="date"]')) {
+        input.value = ${JSON.stringify(fixtureDate)};
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      form.requestSubmit();
+    })()`)
+    const hasApp = `[...document.querySelectorAll('.data-table tbody tr')].some(row => row.textContent.includes(${JSON.stringify(model.alias)}))`
+    await waitFor(js, hasApp)
     await chooseSelect(js, '筛选分类', '下拉验证')
     assert.equal(await js('document.querySelectorAll(\'.data-table tbody tr\').length'), 1)
     await chooseSelect(js, '筛选分类', '未分类')
-    assert.equal(await js('[...document.querySelectorAll(\'.data-table tbody tr\')].some(r => r.textContent.includes(\'代码编辑器\'))'), false)
+    assert.equal(await js(hasApp), false)
     await chooseSelect(js, '筛选分类', '全部分类')
     await invoke('categories:delete', category.id)
   })
