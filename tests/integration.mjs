@@ -191,29 +191,45 @@ async function run() {
       assert.equal(cards[2], '31分钟')
     })
     await test('Overview ranking adapts icon tiles and usage bars to both themes', async () => {
-      const readRow = () => js(`(() => {
+      const readRow = dark => js(`(async () => {
+        document.documentElement.classList.toggle('dark', ${dark});
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
         const row = document.querySelector('.usage-app-row');
         const icon = row.querySelector('.usage-app-icon');
         const bar = row.querySelector('.usage-app-progress');
         const indicator = bar.firstElementChild;
         return {
+          dark: document.documentElement.classList.contains('dark'),
+          cardToken: getComputedStyle(icon).getPropertyValue('--card').trim(),
           href: row.getAttribute('href'),
           icon: getComputedStyle(icon).backgroundColor,
           track: getComputedStyle(bar).backgroundColor,
           indicator: getComputedStyle(indicator).backgroundColor,
         };
       })()`)
-      const dark = await readRow()
+      const forcedColors = await js('matchMedia(\'(forced-colors: active)\').matches')
+      const debuggerClient = win.webContents.debugger
       try {
-        await js('document.documentElement.classList.remove(\'dark\')')
-        const light = await readRow()
+        if (forcedColors) {
+          debuggerClient.attach('1.3')
+          await debuggerClient.sendCommand('Emulation.setEmulatedMedia', { features: [{ name: 'forced-colors', value: 'none' }] })
+        }
+        const dark = await readRow(true)
+        const light = await readRow(false)
+        const context = JSON.stringify({ dark, light, forcedColors })
+        assert.equal(dark.dark, true, context)
+        assert.equal(light.dark, false, context)
         assert.match(dark.href, /^#\/detail\?app=\d+$/)
         for (const element of ['icon', 'track', 'indicator'])
-          assert.notEqual(dark[element], light[element], element)
+          assert.notEqual(dark[element], light[element], `${element}: ${context}`)
         assert.notEqual(dark.track, dark.indicator)
       }
       finally {
         await js('document.documentElement.classList.add(\'dark\')')
+        if (forcedColors && debuggerClient.isAttached()) {
+          await debuggerClient.sendCommand('Emulation.setEmulatedMedia', { features: [] })
+          debuggerClient.detach()
+        }
       }
       await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
       await fs.writeFile(path.join(temporary, 'overview.png'), (await win.webContents.capturePage()).toPNG())
