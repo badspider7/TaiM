@@ -8,7 +8,7 @@ Status: implemented
 
 ## 决定
 
-发布仍由与 `package.json` 版本一致的 `v` 标签触发。Windows、macOS Apple 芯片和 Linux x64 分别在本机架构的 runner 构建 NSIS、DMG 和 AppImage；三个构建都成功且附件存在后，合并校验文件并公开 Release。版本带预发布后缀时标为 Pre-release，无后缀时标为 Release。当前正式版本为 `0.0.1`。Windows 的 `latest.yml` 和 blockmap 保持原样，继续供应用内更新使用。
+发布仍由与 `package.json` 版本一致的 `v` 标签触发。Windows、macOS Apple 芯片和 Linux x64 分别在本机架构的 runner 构建 NSIS、DMG 和 AppImage；三个构建都成功且附件存在后，合并校验文件并公开 Release。工作流也可从主分支手动运行，传入已有 `release_tag` 以重新构建同一标签。版本带预发布后缀时标为 Pre-release，无后缀时标为 Release。当前正式版本为 `0.0.1`。Windows 的 `latest.yml` 和 blockmap 保持原样，继续供应用内更新使用。
 
 ## 考虑过的替代方案
 
@@ -30,9 +30,10 @@ Status: implemented
 
 ## 验证与限制
 
-本地 `pnpm lint`、`pnpm build`、`pnpm test` 通过。GitHub Actions 三平台构建及真实设备安装结果待验证。
+本地 `pnpm lint`、`pnpm build`、`pnpm test` 通过。`v0.0.1` 首次运行中三个平台构建均成功，但发布任务因通配上传路径保留版本子目录而未通过；已将矩阵上传路径改为明确版本目录，待重新验证。真实设备安装结果待验证。
 
 ## 提交追踪
 
 - 实现提交：`6ba8170fe2b83636af29b08e69111c0e961796f2`。
+- 发布路径修正提交：`9f056c6c229ef74a177b4c4622353afc85bb5204`。
 - 基准 `HEAD`：`10bd859b84324bc61786f4791e78c5518eb56e48`。
