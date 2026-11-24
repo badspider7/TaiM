@@ -24,6 +24,7 @@ const invokes = new Set([
   'categories:save',
   'categories:delete',
   'apps:update',
+  'apps:batch-category',
   'data:export',
   'data:import',
   'data:folder',

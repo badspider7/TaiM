@@ -260,13 +260,39 @@ async function run() {
       assert.equal((await invoke('getAppInfo')).find(app => app.id === model.id).alias, '代码编辑器')
       await invoke('categories:save', category.id, '工作')
       assert.equal((await invoke('categories:list'))[0].name, '工作')
+      const secondId = db.prepare('INSERT INTO AppModels(name, alias, file, categoryId, iconFile, totalTime) VALUES (?, ?, ?, 0, ?, 0)')
+        .run('Batch fixture', '第二应用', 'C:\\Apps\\Batch.exe', '').lastInsertRowid
+      assert.deepEqual(await invoke('apps:batch-category', [model.id, Number(secondId)], category.id), { updated: 2 })
+      assert.deepEqual(db.prepare('SELECT categoryId FROM AppModels WHERE id IN (?, ?) ORDER BY id').all(model.id, secondId).map(row => row.categoryId), [category.id, category.id])
+      assert.equal(db.prepare('SELECT alias FROM AppModels WHERE id = ?').get(model.id).alias, '代码编辑器')
+      await assert.rejects(() => invoke('apps:batch-category', [model.id, 999999], 0))
+      assert.equal(db.prepare('SELECT categoryId FROM AppModels WHERE id = ?').get(model.id).categoryId, category.id)
+      await assert.rejects(() => invoke('apps:batch-category', [model.id, model.id], 0))
       await js('location.hash = \'#/category\'')
       await waitText('应用归类')
       await waitText('代码编辑器')
+      await waitText('第二应用')
+      await js('document.querySelector(\'[aria-label="选择代码编辑器"]\').click(); document.querySelector(\'[aria-label="选择第二应用"]\').click()')
+      await waitText('已选 2 个应用')
+      await js('document.querySelector(\'.category-target button\').click()')
+      await waitText('已将 2 个应用归类为未分类')
+      assert.deepEqual(db.prepare('SELECT categoryId FROM AppModels WHERE id IN (?, ?) ORDER BY id').all(model.id, secondId).map(row => row.categoryId), [0, 0])
+      await js(`(() => {
+        const row = [...document.querySelectorAll('.app-choice')].find(item => item.textContent.includes('第二应用'));
+        const target = [...document.querySelectorAll('.category-target')].find(item => item.textContent.includes('工作'));
+        const transfer = new DataTransfer();
+        row.dispatchEvent(new DragEvent('dragstart', { bubbles: true, dataTransfer: transfer }));
+        target.dispatchEvent(new DragEvent('dragover', { bubbles: true, cancelable: true, dataTransfer: transfer }));
+        target.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: transfer }));
+      })()`)
+      for (let attempt = 0; attempt < 40 && db.prepare('SELECT categoryId FROM AppModels WHERE id = ?').get(secondId).categoryId !== category.id; attempt++)
+        await pause(25)
+      assert.equal(db.prepare('SELECT categoryId FROM AppModels WHERE id = ?').get(secondId).categoryId, category.id)
       await pause(100)
       await fs.writeFile(path.join(temporary, 'category.png'), (await win.webContents.capturePage()).toPNG())
       await invoke('categories:delete', category.id)
       assert.equal((await invoke('getAppInfo'))[0].categoryId, 0)
+      db.prepare('DELETE FROM AppModels WHERE id = ?').run(secondId)
     })
     await test('Detail, statistics and data settings routes render without runtime errors', async () => {
       await js('location.hash = \'#/detail\'')

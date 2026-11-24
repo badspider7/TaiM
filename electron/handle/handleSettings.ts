@@ -53,6 +53,22 @@ export function setupSettings(win: BrowserWindow) {
     }
     db.prepare('UPDATE AppModels SET alias = ?, categoryId = ? WHERE id = ?').run(alias.trim(), categoryId, id)
   })
+  ipcMain.handle('apps:batch-category', (_event, ids: unknown, categoryId: unknown) => {
+    if (!Array.isArray(ids) || ids.length === 0 || ids.length > 10000
+      || ids.some(id => !Number.isSafeInteger(id) || id <= 0)
+      || new Set(ids).size !== ids.length
+      || !Number.isSafeInteger(categoryId) || (categoryId !== 0 && !db.prepare('SELECT id FROM Categories WHERE id = ?').get(categoryId))) {
+      throw new Error('应用分类信息无效')
+    }
+    const update = db.prepare('UPDATE AppModels SET categoryId = ? WHERE id = ?')
+    db.transaction(() => {
+      for (const id of ids) {
+        if (update.run(categoryId, id).changes !== 1)
+          throw new Error('应用不存在，请刷新后重试')
+      }
+    })()
+    return { updated: ids.length }
+  })
   ipcMain.handle('data:export', async (_event, format: string) => {
     if (!['json', 'csv'].includes(format))
       throw new Error('导出格式无效')
