@@ -30,7 +30,7 @@ Status: implemented
 
 ## 验证与限制
 
-本地 `pnpm lint`、`pnpm build`、`pnpm test` 通过。`v0.0.1` 首次运行中三个平台构建均成功，但发布任务因通配上传路径保留版本子目录而未通过。修正上传路径后的手动运行又发现 Windows 校验步骤仍读取主分支名称；已统一使用传入的发布标签，待重新验证。真实设备安装结果待验证。
+本地 `pnpm lint`、`pnpm build`、`pnpm test` 通过。`v0.0.1` 首次运行中三个平台构建均成功，但发布任务因通配上传路径保留版本子目录而未通过。修正上传路径后的手动运行又发现 Windows 校验步骤仍读取主分支名称；统一使用传入的发布标签后，[再次运行](https://github.com/badspider7/TaiM/actions/runs/45321838189)的三个平台构建和发布任务全部成功。[GitHub Release](https://github.com/badspider7/TaiM/releases/tag/v0.0.1) 已公开，API 返回 `draft=false`、`prerelease=false`，有三个平台的安装包及更新、校验附件。真实设备安装结果待验证。
 
 ## 提交追踪
 
