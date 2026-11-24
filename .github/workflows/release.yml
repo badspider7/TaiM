@@ -4,12 +4,17 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing version tag to package and publish
+        required: false
+        type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.release_tag || github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -25,6 +30,8 @@ jobs:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
       - uses: pnpm/action-setup@v4
         with:
           version: 10.33.0
@@ -35,7 +42,7 @@ jobs:
       - name: Validate release tag
         id: version
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
         run: |
           $packageVersion = (Get-Content package.json | ConvertFrom-Json).version
           if ($env:RELEASE_TAG -ne "v$packageVersion") { throw 'Tag and package version must match. Select a version tag for manual runs.' }
@@ -96,6 +103,8 @@ jobs:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
       - uses: pnpm/action-setup@v4
         with:
           version: 10.33.0
@@ -104,10 +113,13 @@ jobs:
           node-version: '22'
           cache: pnpm
       - name: Validate release tag
+        id: version
         env:
-          RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
+        shell: bash
         run: |
           node -e "const version = require('./package.json').version; if (process.env.RELEASE_TAG !== 'v' + version) process.exit(1)"
+          echo "version=${RELEASE_TAG#v}" >> "$GITHUB_OUTPUT"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts --registry=https://registry.npmjs.org
       - name: Prepare Electron and native modules
@@ -121,7 +133,7 @@ jobs:
       - name: Verify package
         env:
           PLATFORM: ${{ matrix.platform }}
-          RELEASE_VERSION: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ inputs.release_tag || github.ref_name }}
         shell: bash
         run: |
           set -euo pipefail
@@ -136,7 +148,7 @@ jobs:
           name: ${{ matrix.platform }}-release
           if-no-files-found: error
           retention-days: 14
-          path: release/*/*.${{ matrix.extension }}
+          path: release/${{ steps.version.outputs.version }}/*.${{ matrix.extension }}
 
   publish:
     name: Publish GitHub Release
@@ -148,11 +160,13 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      RELEASE_TAG: ${{ github.ref_name }}
+      RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
       RELEASE_VERSION: ${{ needs.build.outputs.version }}
       PRERELEASE: ${{ needs.build.outputs.prerelease }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
       - uses: actions/download-artifact@v4
         with:
           pattern: '*-release'

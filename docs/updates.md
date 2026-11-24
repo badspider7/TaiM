@@ -27,7 +27,7 @@
 
 5. `.github/workflows/release.yml` 在 Windows CI 中执行检查、测试并构建 NSIS 安装包，macOS 和 Linux runner 分别构建 Apple 芯片版 DMG 与 x64 AppImage。Windows 更新元数据仍验证版本与校验值；三个平台全部成功后才发布。
 6. 发布任务先建立草稿，合并三个平台的附件并生成覆盖全部附件的 `SHA256SUMS.txt`，上传成功后公开发布；带预发布后缀的版本会标为 prerelease，不带后缀的正式版本标为 release。无需额外 PAT，使用仓库内置 `GITHUB_TOKEN`，仅发布任务有 `contents: write` 权限。
-7. 工作流支持手动重跑，需选择对应版本标签。重复执行会更新同一 Release 的构建产物；不要修改已安装版本的含义，后续功能改动应增加版本号并使用新标签。
+7. 工作流支持手动重跑：可选择对应版本标签，或在主分支运行时填写已有的 `release_tag`。重复执行会更新同一 Release 的构建产物；不要修改已安装版本的含义，后续功能改动应增加版本号并使用新标签。
 
 `pnpm release:win` 仍仅在本地构建，不上传；发布工作由 CI 统一完成。GitHub provider 使用实际生成的 `latest.yml`，不要手动修改其中的版本、文件名或校验值。Windows 安装版使用此文件自动更新，macOS/Linux 目前没有应用内更新。
 
