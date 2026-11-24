@@ -65,3 +65,4 @@
 - [桌面布局、主题和共享应用行](implemented/2026-11-19-desktop-layout-and-theme.md)
 - [应用与网站日期查询、网站 CSV 导出口径](implemented/2026-11-19-record-query-and-export-range.md)
 - [统计图表主题和时段明细](implemented/2026-11-19-statistics-chart-drilldown.md)
+- [Windows 应用图标来源与缺失回退](implemented/2026-11-24-windows-application-icons.md)
