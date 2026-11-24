@@ -14,7 +14,7 @@ export function setupUpdates(win: BrowserWindow, beforeInstall: () => void, inst
     client.logger = logger
   const service = new UpdateService(client, {
     currentVersion: app.getVersion(),
-    disabledReason: packaged ? '安装包缺少更新配置，请从发布页面获取完整安装包' : '开发模式不下载和安装更新，请使用 Windows 安装版',
+    disabledReason: packaged ? '安装包缺少更新配置，请从发布页面获取完整安装包' : app.isPackaged ? '当前平台暂不支持应用内自动更新，请从发布页面下载新版' : '开发模式不下载和安装更新，请使用 Windows 安装版',
     beforeInstall,
     installFailed,
     notify: (state) => {

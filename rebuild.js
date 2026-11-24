@@ -11,11 +11,13 @@ await rebuild({
   electronVersion: require('electron/package.json').version,
   onlyModules: ['better-sqlite3'],
 })
-const windowsRoot = path.dirname(require.resolve('get-windows'))
-const installer = require.resolve('@mapbox/node-pre-gyp/bin/node-pre-gyp')
-const result = spawnSync(process.execPath, [installer, 'install', '--fallback-to-build'], { cwd: windowsRoot, stdio: 'inherit' })
-if (result.status !== 0)
-  process.exit(result.status ?? 1)
+if (process.platform === 'win32') {
+  const windowsRoot = path.dirname(require.resolve('get-windows'))
+  const installer = require.resolve('@mapbox/node-pre-gyp/bin/node-pre-gyp')
+  const result = spawnSync(process.execPath, [installer, 'install', '--fallback-to-build'], { cwd: windowsRoot, stdio: 'inherit' })
+  if (result.status !== 0)
+    process.exit(result.status ?? 1)
+}
 const root = path.dirname(require.resolve('better-sqlite3/package.json'))
 const binding = path.join(root, 'build', 'Release', 'better_sqlite3.node')
 if (!fs.existsSync(binding))

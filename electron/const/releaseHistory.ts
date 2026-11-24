@@ -1,6 +1,18 @@
 // Keep the local history available even when the update server cannot be reached.
 export const releaseHistory = [
   {
+    version: '0.0.1',
+    date: '2026-11-24',
+    title: '首个正式版与多平台安装包',
+    notes: [
+      '新增 macOS Apple 芯片版和 Linux x64 安装包；Windows x64 安装包继续支持应用内自动更新。',
+      '修复部分 Windows 应用图标显示为通用图标的问题。',
+      '网站默认按域名汇总，可展开查看具体页面。',
+      '应用详情增加按小时、日期或月份展示的使用趋势。',
+      '分类页支持多选、批量归类和拖放归类。',
+    ],
+  },
+  {
     version: '0.0.1-beta.4',
     date: '2026-11-19',
     title: '桌面体验与后台更新',

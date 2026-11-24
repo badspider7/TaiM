@@ -1,9 +1,9 @@
 > [!WARNING]
-> 目前还是开发阶段，只支持windows，功能还在完善中，欢迎提交issue。
+> Windows x64 已作为主要平台验证；macOS Apple 芯片和 Linux x64 提供实验性构建，运行与安装尚未在真实设备上验证，欢迎提交 issue。
 
 ## TaiM！
 
-`windows` 的时间统计软件，记录和统计你每天使用软件的时间，帮助你更好的管理时间。
+桌面时间统计软件，记录和统计你每天使用软件的时间，帮助你更好地管理时间。
 
 ![screenshot](./screenshot/screenShot_1.png)
 ![screenshot](./screenshot/screenShot_2.png)
@@ -28,13 +28,13 @@
 
 ## 下载使用
 
-前往 [GitHub Releases](https://github.com/badspider7/TaiM/releases) 下载 Windows x64 的 `TaiM-Windows-版本号-Setup.exe` 安装包。测试版尚未签名，Windows 可能提示未知发布者。安装版可在“设置 → 关于”检查更新。
+前往 [GitHub Releases](https://github.com/badspider7/TaiM/releases) 下载 Windows x64 的 `TaiM-Windows-版本号-Setup.exe`、macOS Apple 芯片的 `.dmg` 或 Linux x64 的 `.AppImage`。macOS/Linux 构建目前为实验性版本；Linux 前台统计依赖 X11、`xprop` 和 `xwininfo`，不支持 Wayland。Windows 安装包尚未签名，可能提示未知发布者；仅 Windows 安装版支持应用内自动更新。
 
-发布由 [Release CI](https://github.com/badspider7/TaiM/actions/workflows/release.yml) 自动构建：推送与 `package.json` 一致的 `v版本号` 标签，检查通过后自动创建 Release 并上传安装包、blockmap、更新元数据和 SHA256 校验文件。带 beta 的版本自动标为预发布。
+发布由 [Release CI](https://github.com/badspider7/TaiM/actions/workflows/release.yml) 自动构建：推送与 `package.json` 一致的 `v版本号` 标签，三个平台构建全部通过后才创建 Release，上传安装包、Windows 更新元数据和覆盖所有附件的 SHA256 校验文件。含 beta 等预发布后缀的版本标为预发布，正式版本标为 Release。
 
 ## 本地运行
 
-需要 Windows x64、Node.js 20+ 和 pnpm。原生模块通常可下载预编译文件；如需本地编译，安装 Python 3 和 Visual Studio Build Tools 的“使用 C++ 的桌面开发”组件。
+主要开发环境为 Windows x64、Node.js 20+ 和 pnpm。原生模块通常可下载预编译文件；如需本地编译，安装 Python 3 和 Visual Studio Build Tools 的“使用 C++ 的桌面开发”组件。macOS/Linux 需在各自系统上重建 SQLite 原生模块。
 
 ```sh
 pnpm install
@@ -63,7 +63,7 @@ pnpm release:win # 生成 Windows 安装包（需另外验证安装与自启动�
 
 扩展下载、加载和配对步骤见 [网站计时使用说明](docs/browser-extension.md)。也可在应用“网站”页右上角打开“使用说明 / 扩展下载”，使用免下载、自动配对的内置扩展，或从 [Releases](https://github.com/badspider7/TaiM/releases) 获取同版本 `TaiM-Browser-Extension.zip`。该 ZIP 会随新版发布；旧 Release 若无此附件，请使用内置扩展。
 
-默认按具体网址显示页面标题和 URL；按域名汇总时，显示停留时间最长的主要页面，点击页面数量可展开明细。标题来自网站，同一 URL 的动态标题按小时保留最后值，不提供每次访问的标题历史。
+默认按域名汇总，显示停留时间最长的主要页面；点击页面数量可展开具体网址和标题。标题来自网站，同一 URL 的动态标题按小时保留最后值，不提供每次访问的标题历史。
 
 仅统计系统前台浏览器的当前标签页，约每秒采样；切换网页有约 1 秒误差。空闲、锁屏、休眠、无痕窗口、浏览器内部页面和后台网页不计时。扩展心跳失效后最多 2.5 秒停止计时，不会回填断连期间的浏览历史。
 
