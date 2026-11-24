@@ -60,6 +60,7 @@
 
 ## 已实施记录
 
+- [三平台安装包与正式版发布](implemented/2026-11-24-three-platform-stable-release.md)
 - [Windows 后台下载与确认安装](implemented/2026-11-19-background-update-download.md)
 - [概览与统计的时长显示和比较口径](implemented/2026-11-19-readable-usage-metrics.md)
 - [桌面布局、主题和共享应用行](implemented/2026-11-19-desktop-layout-and-theme.md)
