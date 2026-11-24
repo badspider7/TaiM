@@ -275,6 +275,37 @@ async function run() {
       const [first, last] = await js('[...document.querySelectorAll(\'input[type=date]\')].map(input => input.value)')
       assert.equal(Date.parse(last) - Date.parse(first), 6 * 86400000)
       await waitText(`${first} 至 ${last}`)
+      const appId = (await invoke('getAppInfo')).find(app => app.name === record.name).id
+      await js(`location.hash = '#/detail?app=${appId}'`)
+      await waitText('代码编辑器')
+      await js(`(() => {
+        const fields = [...document.querySelectorAll('input[type=date]')];
+        for (const field of fields) {
+          field.value = '2026-11-17';
+          field.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        [...document.querySelectorAll('button')].find(button => button.textContent.trim() === '查询 / 刷新').click();
+      })()`)
+      await waitText('使用趋势 · 每小时')
+      assert.equal(await js('!!document.querySelector(".trend-chart canvas")'), true)
+      await js('new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
+      await fs.writeFile(path.join(temporary, 'app-detail-trend.png'), (await win.webContents.capturePage()).toPNG())
+      await js(`(() => {
+        const end = [...document.querySelectorAll('input[type=date]')][1];
+        end.value = '2026-11-18';
+        end.dispatchEvent(new Event('input', { bubbles: true }));
+        [...document.querySelectorAll('button')].find(button => button.textContent.trim() === '查询 / 刷新').click();
+      })()`)
+      await waitText('使用趋势 · 每天')
+      await js(`(() => {
+        const fields = [...document.querySelectorAll('input[type=date]')];
+        fields[0].value = '2026-10-31';
+        fields[1].value = '2026-12-01';
+        for (const field of fields)
+          field.dispatchEvent(new Event('input', { bubbles: true }));
+        [...document.querySelectorAll('button')].find(button => button.textContent.trim() === '查询 / 刷新').click();
+      })()`)
+      await waitText('使用趋势 · 每月')
       await js('location.hash = \'#/statistics\'')
       await waitText('累计使用时间')
       await waitText('查看时段明细')

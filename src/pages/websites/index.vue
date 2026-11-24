@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 interface Row { browser: string, url: string, domain: string, title: string, time: number, pageCount: number }
 const start = ref(formatDate(new Date()).slice(0, 10))
 const end = ref(start.value)
-const group = ref('url')
+const group = ref('domain')
 const selectedDomain = ref('')
 const query = ref('')
 const data = ref<Row[]>([])
@@ -115,7 +115,7 @@ onUnmounted(() => clearInterval(timer))
           <Search :size="16" aria-hidden="true" />
           <input v-model="query" type="search" placeholder="搜索域名、网址或标题" aria-label="搜索网站">
         </div>
-        <AppSelect v-model="group" label="网站汇总方式" :options="[{ value: 'domain', label: '按域名汇总' }, { value: 'url', label: '按具体网址' }]" :disabled="busy" @change="changeGroup" />
+        <AppSelect v-model="group" label="网站汇总方式" :options="[{ value: 'domain', label: '按网站汇总' }, { value: 'url', label: '按具体网址' }]" :disabled="busy" @change="changeGroup" />
       </div>
     </div>
     <p v-if="error" role="alert" class="error-message">

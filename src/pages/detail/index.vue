@@ -2,11 +2,12 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ChevronRight, Search } from 'lucide-vue-next'
-import type { AppData } from '@@/type/types'
+import type { AppData, HoursLogModels } from '@@/type/types'
 import { useAppDetail } from '@/hooks/useAppDetail'
 import { Time, formatDate } from '@/utils/timerEvent'
 import { useAppInfo } from '@/store/app'
 import AppSelect from '@/components/AppSelect.vue'
+import AppUsageTrend from '@/components/AppUsageTrend.vue'
 import DateRangeFilter from '@/components/DateRangeFilter.vue'
 import NoData from '@/components/NoData.vue'
 import PageHeading from '@/components/layout/PageHeading.vue'
@@ -22,11 +23,14 @@ const selectedApp = ref(String(route.query.app ?? ''))
 const categories = ref<{ id: number, name: string }[]>([])
 const categoryOptions = computed(() => [{ value: 'all', label: '全部分类' }, { value: '0', label: '未分类' }, ...categories.value.map(c => ({ value: String(c.id), label: c.name }))])
 const data = ref<AppData[]>([])
+const hourly = ref<HoursLogModels[]>([])
 const busy = ref(false)
 const savingAlias = ref(false)
 const error = ref('')
 const message = ref('')
 const appliedRange = ref('')
+const appliedStart = ref('')
+const appliedEnd = ref('')
 const selected = computed(() => useAppInfo().appInfoList.find(a => String(a.id) === selectedApp.value))
 const alias = ref('')
 watch(selected, (a) => {
@@ -70,9 +74,16 @@ async function load() {
   try {
     const first = start.value
     const last = end.value
-    const records = await window.ipcRenderer.invoke('usageData:range', `${first} 00:00:00`, `${last} 00:00:00`)
+    const [records, hours, categoryList] = await Promise.all([
+      window.ipcRenderer.invoke('usageData:range', `${first} 00:00:00`, `${last} 00:00:00`),
+      first === last ? window.ipcRenderer.invoke('usageData:hour', first) : Promise.resolve([]),
+      window.ipcRenderer.invoke('categories:list'),
+    ])
     data.value = await useAppDetail(records)
-    categories.value = await window.ipcRenderer.invoke('categories:list')
+    hourly.value = hours
+    categories.value = categoryList
+    appliedStart.value = first
+    appliedEnd.value = last
     appliedRange.value = first === last ? first : `${first} 至 ${last}`
   }
   catch (e) {
@@ -167,6 +178,7 @@ onMounted(load)
       <p v-if="message" role="status" class="text-sm text-muted-foreground mb-3">
         {{ message }}
       </p>
+      <AppUsageTrend v-if="history.length" :app-id="selected.id!" :start="appliedStart" :end="appliedEnd" :daily="data" :hourly="hourly" />
       <div v-if="history.length" class="surface table-surface">
         <table class="data-table">
           <thead><tr><th>日期</th><th>使用时间</th></tr></thead><tbody>
